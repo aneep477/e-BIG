@@ -1,0 +1,14 @@
+/* Anda boleh tambah gaya tambahan di sini jika perlu */
+/* Contoh: Menyesuaikan jarak atau warna */
+body {
+    background-color: #f8f9fa; /* Warna latar belakang lembut */
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Bayang-bayang ringan */
+}
+
+#result {
+    border-color: #0d6efd; /* Warna biru Bootstrap */
+    background-color: #e7f1ff; /* Latar belakang biru lembut */
+}
