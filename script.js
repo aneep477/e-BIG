@@ -195,14 +195,65 @@ function calculateScore() {
 
 // --- FUNGSI UNTUK PENYIMPANAN DAN EKSPORT ---
 
-// Fungsi untuk menyimpan data markah dan catatan ke localStorage
-function saveData() {
+// --- FUNGSI BARU UNTUK PENYIMPANAN KE GOOGLE SHEETS ---
+// Gantikan 'YOUR_WEB_APP_URL_HERE' dengan URL Web App yang anda salin
+const WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_WEB_APP_URL_HERE/exec';
+
+// Fungsi untuk menyimpan data markah dan catatan ke Google Sheets melalui Web App
+async function saveData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
+
     if (!selectedStudentId) {
         alert("Sila pilih seorang pelajar dahulu.");
         return;
     }
+
+    // Kumpulkan data dari borang
+    const dataToSave = {
+        studentId: selectedStudentId,
+        // Markah
+        organizingA4: parseFloat(document.getElementById('organizingA4').value) || null,
+        positiveBehaviorKMI3: parseFloat(document.getElementById('positiveBehaviorKMI3').value) || null,
+        organizingA4Comm: parseFloat(document.getElementById('organizingA4Comm').value) || null,
+        nonVerbalCommKMK12: parseFloat(document.getElementById('nonVerbalCommKMK12').value) || null,
+        mechanismP4: parseFloat(document.getElementById('mechanismP4').value) || null,
+        valueAppreciationA5: parseFloat(document.getElementById('valueAppreciationA5').value) || null,
+        responsibilityKAT10: parseFloat(document.getElementById('responsibilityKAT10').value) || null,
+        examScore: parseFloat(document.getElementById('examScore').value) || null,
+        // Catatan
+        notesHP4: document.getElementById('notesHP4').value.trim(),
+        notesHP5: document.getElementById('notesHP5').value.trim(),
+        notesHP3: document.getElementById('notesHP3').value.trim(),
+        notesHP8: document.getElementById('notesHP8').value.trim(),
+        notesExam: document.getElementById('notesExam').value.trim()
+        // Tarikh simpan akan ditambah oleh Web App
+    };
+
+    console.log("Data untuk disimpan:", dataToSave); // Untuk debugging
+
+    try {
+        const response = await fetch(https://script.google.com/macros/s/AKfycbywN41SMYwXeaZDTY7IS3ySuknC4le74XQ2unt9dkFWFVvVjKjiJJiPpcCwiGXQ767l/exec, {
+            method: 'POST',
+            mode: 'cors', // Penting untuk komunikasi antara domain
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSave)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ralat HTTP! status: ${response.status}`);
+        }
+
+        const resultText = await response.text();
+        alert(resultText); // Papar mesej kejayaan atau ralat dari Web App
+
+    } catch (error) {
+        console.error('Ralat menyimpan data:', error);
+        alert('Ralat berlaku semasa menyimpan data. Sila cuba lagi. Ralat: ' + error.message);
+    }
+}
 
     // Kumpulkan data markah
     const dataToSave = {
@@ -238,13 +289,29 @@ function saveData() {
     calculateScore();
 }
 
-// Fungsi untuk memuatkan data yang telah disimpan untuk pelajar tertentu
-function loadDataForStudent(studentId) {
-    const allSavedData = JSON.parse(localStorage.getItem('rubricData')) || {};
-    const studentData = allSavedData[studentId];
+// --- FUNGSI BARU UNTUK MEMUATKAN DATA DARI GOOGLE SHEETS ---
+// Fungsi untuk memuatkan data markah dan catatan yang telah disimpan untuk pelajar tertentu
+async function loadDataForStudent(studentId) {
+    if (!studentId) return;
 
-    if (studentData) {
-        // Muatkan markah
+    try {
+        // Bina URL dengan parameter studentId
+        const url = `${https://script.google.com/macros/s/AKfycbywN41SMYwXeaZDTY7IS3ySuknC4le74XQ2unt9dkFWFVvVjKjiJJiPpcCwiGXQ767l/exec}?studentId=${encodeURIComponent(studentId)}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors' // Penting untuk komunikasi antara domain
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ralat HTTP! status: ${response.status}`);
+        }
+
+        const studentData = await response.json();
+        console.log("Data dimuatkan:", studentData); // Untuk debugging
+
+        // Isikan borang dengan data yang dimuatkan
+        // Pastikan kunci dalam studentData sepadan dengan ID elemen input
         document.getElementById('organizingA4').value = studentData.organizingA4 !== null ? studentData.organizingA4 : '';
         document.getElementById('positiveBehaviorKMI3').value = studentData.positiveBehaviorKMI3 !== null ? studentData.positiveBehaviorKMI3 : '';
         document.getElementById('organizingA4Comm').value = studentData.organizingA4Comm !== null ? studentData.organizingA4Comm : '';
@@ -260,8 +327,27 @@ function loadDataForStudent(studentId) {
         document.getElementById('notesHP3').value = studentData.notesHP3 || '';
         document.getElementById('notesHP8').value = studentData.notesHP8 || '';
         document.getElementById('notesExam').value = studentData.notesExam || '';
+
+    } catch (error) {
+        console.error('Ralat memuatkan data:', error);
+         // Tidak perlu alert untuk ralat muat data, mungkin tiada data lagi
+         // Kosongkan borang jika ralat (pilihan)
+         resetForm();
     }
-    // Jika tiada data disimpan, borang kekal kosong/reset
+}
+
+// Fungsi pembantu untuk reset borang (pastikan ia ada)
+function resetForm() {
+    document.getElementById('rubricForm').reset();
+    // Reset nilai paparan keputusan jika ada
+    const resultElements = document.querySelectorAll('#result span');
+    resultElements.forEach(el => {
+        if (el.id !== 'resultStudentName') { // Jangan reset nama pelajar
+             el.textContent = '0.00'; // Atau '-' untuk gred
+        }
+    });
+    document.getElementById('grade').textContent = '-';
+    document.getElementById('result').style.display = 'none';
 }
 
 // Fungsi untuk mengeksport data ke Excel
