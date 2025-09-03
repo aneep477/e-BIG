@@ -16,7 +16,7 @@ const GRADE_SCALE = [
   { minScore: 0, grade: 'F' }
 ];
 
-// URL Apps Script anda telah dimasukkan di sini
+// URL Apps Script anda
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo_nfMUAWyBstQdpsPFlL2l1cwhsLrPyUfKvOgFzeICQ7kg7XgcOaHFmDIErkvZNb3/exec';
 
 let filteredStudents = [];
@@ -297,14 +297,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('saveDataBtn').addEventListener('click', saveData);
     document.getElementById('calculateScoreBtn').addEventListener('click', calculateScore);
     
-    // Anda boleh padamkan event listener untuk butang eksport jika anda telah memadamnya dari HTML
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
-       // Cadangan: Tukar fungsi butang untuk membuka Google Sheet
        exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
        exportBtn.addEventListener('click', () => {
-            // Gantikan dengan URL Google Sheet anda
-            window.open('URL_GOOGLE_SHEET_ANDA', '_blank');
+            // URL Google Sheet anda telah dimasukkan di sini
+            window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
        });
     }
 });
