@@ -15,19 +15,19 @@
             <!-- Lajur untuk Logo (Sebelah Kiri) -->
             <div class="col-auto">
                 <!-- Gantikan dengan URL logo anda -->
-                <img src="https://i.imgur.com/K4Gy3WN.png" alt="Logo" class="img-fluid" style="max-height: 200px;">
+                <img src="https://i.imgur.com/K4Gy3WN.png" alt="Logo" class="img-fluid" style="max-height: 80px;">
             </div>
             <!-- Lajur untuk Tajuk (Sebelah Kanan Logo) -->
             <div class="col text-center">
-                <h1 class="mb-2">Sistem Pemarkahan Bina Insan Guru</h1>
-                <h2 class="mb-0">(PDPP Ambilan Oktober 2024)</h2>
+                <h1 class="mb-2">Rubrik Pemarkahan Amali & Ujian - MPU2082</h1>
+                <h2 class="mb-0">(Ambilan Oktober 2024)</h2>
             </div>
         </div>
 
         <!-- Penapis Pelajar -->
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
-                <h3>Saring Pelajar</h3>
+                <h3>Penapis Pelajar</h3>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -46,7 +46,7 @@
                         </select>
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline-secondary" onclick="applyFilters()">Gunakan Saringan</button>
+                <button type="button" class="btn btn-outline-secondary" id="applyFiltersBtn">Gunakan Penapis</button>
             </div>
         </div>
 
@@ -74,7 +74,7 @@
         <form id="rubricForm" style="display:none;">
             <!-- HP4 - Kemahiran Interpersonal (30%) -->
             <div class="card mb-4">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">HP4: Kemahiran Interpersonal (30%)</h3>
                 </div>
                 <div class="card-body">
@@ -97,7 +97,7 @@
 
             <!-- HP5 - Kemahiran Komunikasi (30%) -->
             <div class="card mb-4">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-success text-white">
                     <h3 class="mb-0">HP5: Kemahiran Komunikasi (30%)</h3>
                 </div>
                 <div class="card-body">
@@ -120,7 +120,7 @@
 
             <!-- Amali 2 - 30% -->
             <div class="card mb-4">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-info text-white">
                     <h3 class="mb-0">Amali 2: 30%</h3>
                 </div>
                 <div class="card-body">
@@ -169,7 +169,7 @@
 
             <!-- Ujian - 10% -->
             <div class="card mb-4">
-                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <div class="card-header bg-warning text-dark">
                     <h3 class="mb-0">Ujian: 10%</h3>
                 </div>
                 <div class="card-body">
@@ -185,8 +185,8 @@
             </div>
 
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
-                <button type="button" class="btn btn-success me-md-2" onclick="saveData()">Simpan Data</button>
-                <button type="button" class="btn btn-primary" onclick="calculateScore()">Kira Markah</button>
+                <button type="button" class="btn btn-success me-md-2" id="saveDataBtn">Simpan Data</button>
+                <button type="button" class="btn btn-primary" id="calculateScoreBtn">Kira Markah</button>
             </div>
         </form>
 
@@ -203,27 +203,10 @@
 
         <!-- Butang Muat Turun Excel -->
         <div class="text-center mt-4">
-            <button type="button" class="btn btn-info btn-lg" onclick="exportToExcel()">Muat Turun Data (Excel)</button>
+            <button type="button" class="btn btn-info btn-lg" id="exportBtn">Muat Turun Data (Excel)</button>
         </div>
     </div>
-    <!-- Maklumat Sistem -->
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Maklumat Sistem</h5>
-            </div>
-            <div class="card-body">
-                <ul>
-                    <li><strong>Amali 1 (60%):</strong> HP4 (Menyusun Idea dalam Bentuk A4) & HP5 (Komunikasi Bukan Verbal Semasa Persembahan KMK12)</li>
-                    <li><strong>Amali 2 (30%):</strong> HP3 (Mekanisma P4), HP8 (Penghargaan terhadap Nilai A5) & KAT10 (Tanggungjawab)</li>
-                    <li><strong>Ujian (10%):</strong> Ujian</li>
-                    <li><strong>Catatan:</strong> Terdapat ruang teks untuk setiap bahagian HP dan Ujian untuk memasukkan catatan.</li>
-                    <li><strong>Penyimpanan:</strong> Data markah dan catatan disimpan dalam <code>localStorage</code> pelayar apabila anda klik "Simpan Data".</li>
-                    <li><strong>Eksport Excel:</strong> Anda boleh mengeksport semua data yang telah disimpan ke dalam fail Excel.</li>
-                    <li><strong>@Haniffaizal:</strong> @Kera_Berok.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SheetJS Library for Excel Export -->
