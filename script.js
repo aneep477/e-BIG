@@ -2,7 +2,7 @@
 
 // --- KONFIGURASI UNTUK GOOGLE APPS SCRIPT ---
 // *** PASTIKAN URL INI ADALAH URL SEBENAR WEB APP ANDA ***
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2F3wqaF-6s8dyDavzKx4h_rFtYiLZsjFr2eczEx2nAdOZxm6V4lKHH6WbpW5jiJpZ/exec'; // <-- GANTIKAN INI DENGAN URL SEBENAR
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2F3wqAF-6s8dyDavzKx4h_rFtYiLZsjFr2eczEx2nAdOZxm6V4IKHHeWbpW5jiJpZ/exec';<-- GANTIKAN INI DENGAN URL SEBENAR
 
 // Jadual Gred Baru
 const GRADE_SCALE = [
