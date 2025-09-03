@@ -1,8 +1,8 @@
 // script.js
 
 // --- KONFIGURASI UNTUK GOOGLE APPS SCRIPT ---
-// *** PASTIKAN URL INI ADALAH URL SEBENAR WEB APP ANDA ***
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2F3wqAF-6s8dyDavzKx4h_rFtYiLZsjFr2eczEx2nAdOZxm6V4IKHHeWbpW5jiJpZ/exec';<-- GANTIKAN INI DENGAN URL SEBENAR
+// URL Web App yang SEBENAR dari Google Apps Script
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2F3wqAF-6s8dyDavzKx4h_rFtYiLZsjFr2eczEx2nAdOZxm6V4IKHHeWbpW5jiJpZ/exec';
 
 // Jadual Gred Baru
 const GRADE_SCALE = [
@@ -269,7 +269,7 @@ async function saveData() {
         calculateScore(); // Kira semula untuk memastikan paparan terkini
 
     } catch (error) {
-        console.error('Ralat menyimpan data:', error);
+        console.error('Ralat menyimpan ', error);
         alert('Ralat berlaku semasa menyimpan data. Sila cuba lagi. Ralat: ' + error.message);
     }
 }
@@ -320,7 +320,7 @@ async function loadDataForStudent(studentId) {
         }
 
     } catch (error) {
-        console.error('Ralat memuatkan data:', error);
+        console.error('Ralat memuatkan ', error);
          // Tidak perlu alert untuk ralat muat data, mungkin tiada data lagi
          // Kosongkan borang jika ralat (pilihan)
          resetForm();
