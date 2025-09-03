@@ -16,6 +16,9 @@ const GRADE_SCALE = [
   { minScore: 0, grade: 'F' }
 ];
 
+// URL Apps Script anda telah dimasukkan di sini
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo_nfMUAWyBstQdpsPFlL2l1cwhsLrPyUfKvOgFzeICQ7kg7XgcOaHFmDIErkvZNb3/exec';
+
 let filteredStudents = [];
 let uniqueClasses = [];
 let uniqueSeries = [];
@@ -32,11 +35,9 @@ function loadFilterOptions() {
     const classFilter = document.getElementById('classFilter');
     const seriesFilter = document.getElementById('seriesFilter');
 
-    // Kosongkan pilihan sedia ada
     classFilter.innerHTML = '<option value="">Semua Kelas</option>';
     seriesFilter.innerHTML = '<option value="">Semua Siri</option>';
 
-    // Tambah pilihan unik
     uniqueClasses.forEach(cls => {
         const option = document.createElement('option');
         option.value = cls;
@@ -52,17 +53,14 @@ function loadFilterOptions() {
     });
 }
 
-// Fungsi untuk memuatkan senarai pelajar ke dalam dropdown (berdasarkan penapisan)
+// Fungsi untuk memuatkan senarai pelajar ke dalam dropdown
 function loadStudents(studentsToLoad = students) {
     const studentSelect = document.getElementById('studentSelect');
-    // Reset senarai pelajar
     studentSelect.innerHTML = '<option value="" selected disabled>Pilih seorang pelajar</option>';
 
-    // Tambah setiap pelajar ke dropdown
     studentsToLoad.forEach(student => {
         const option = document.createElement('option');
         option.value = student.id;
-        // Paparkan Nama (No. Giliran)
         option.textContent = `${student.name} (${student.a_giliran})`;
         studentSelect.appendChild(option);
     });
@@ -80,7 +78,6 @@ function applyFilters() {
     });
 
     loadStudents(filteredStudents);
-    // Reset pemilihan pelajar dan borang
     document.getElementById('studentSelect').value = "";
     onStudentSelectChange();
 }
@@ -97,7 +94,6 @@ function onStudentSelectChange() {
         const selectedStudent = students.find(student => student.id === selectedStudentId);
 
         if (selectedStudent) {
-            // Paparkan maklumat pelajar
             document.getElementById('selectedStudentName').textContent = selectedStudent.name;
             document.getElementById('selectedStudentIC').textContent = selectedStudent.ic;
             document.getElementById('selectedStudentAGiliran').textContent = selectedStudent.a_giliran;
@@ -107,7 +103,7 @@ function onStudentSelectChange() {
             studentInfoDiv.style.display = 'block';
             rubricForm.style.display = 'block';
 
-            // Dapatkan data yang telah disimpan sebelum ini untuk pelajar ini
+            // Dapatkan data dari Google Sheet
             loadDataForStudent(selectedStudentId);
         }
     } else {
@@ -120,7 +116,6 @@ function onStudentSelectChange() {
 // Fungsi untuk mereset borang rubrik
 function resetForm() {
     document.getElementById('rubricForm').reset();
-    // Reset nilai paparan keputusan
     document.getElementById('scoreHP4').textContent = '0.00';
     document.getElementById('scoreHP5').textContent = '0.00';
     document.getElementById('scoreAmali2').textContent = '0.00';
@@ -132,47 +127,34 @@ function resetForm() {
 // Fungsi untuk mengira markah berdasarkan pemberat
 function calculateWeightedScore(rawScore, maxRawScore, weightPercentage) {
     if (isNaN(rawScore) || rawScore < 0) return 0;
-    if (rawScore > maxRawScore) rawScore = maxRawScore; // Elak markah melebihi maksimum
-
-    // Formula: (markah_diperolehi / markah_maksimum) * peratusan_berat
+    if (rawScore > maxRawScore) rawScore = maxRawScore;
     return (rawScore / maxRawScore) * weightPercentage;
 }
 
-// Fungsi untuk menentukan gred berdasarkan jumlah markah menggunakan jadual baru
+// Fungsi untuk menentukan gred
 function determineGrade(totalScore) {
-     // Pastikan totalScore adalah nombor yang sah
      const score = parseFloat(totalScore);
-     if (isNaN(score)) {
-         return 'Tidak Sah';
-     }
-
-     // Cari gred berdasarkan jadual
+     if (isNaN(score)) return 'Tidak Sah';
      for (const gradeInfo of GRADE_SCALE) {
          if (score >= gradeInfo.minScore) {
              return gradeInfo.grade;
          }
      }
-     // Jika markah negatif (walaupun tidak mungkin dengan pengiraan semasa)
      return 'Tidak Sah';
 }
 
-// Fungsi utama untuk mengira jumlah markah dan menentukan gred
+// Fungsi utama untuk mengira jumlah markah
 function calculateScore() {
-    // Dapatkan ID pelajar yang dipilih
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
     if (!selectedStudentId) {
-        alert("Sila pilih seorang pelajar dahulu.");
+        // Jangan tunjuk amaran jika hanya memuatkan data
         return;
     }
 
     const selectedStudent = students.find(student => student.id === selectedStudentId);
-    if (!selectedStudent) {
-        alert("Ralat: Maklumat pelajar tidak dijumpai.");
-        return;
-    }
+    if (!selectedStudent) return;
 
-    // Dapatkan nilai dari setiap input nombor
     const organizingA4 = parseFloat(document.getElementById('organizingA4').value) || 0;
     const positiveBehaviorKMI3 = parseFloat(document.getElementById('positiveBehaviorKMI3').value) || 0;
     const organizingA4Comm = parseFloat(document.getElementById('organizingA4Comm').value) || 0;
@@ -182,37 +164,29 @@ function calculateScore() {
     const responsibilityKAT10 = parseFloat(document.getElementById('responsibilityKAT10').value) || 0;
     const examScore = parseFloat(document.getElementById('examScore').value) || 0;
 
-    // Kira markah berdasarkan pemberat (menggunakan 30% untuk Amali 1 dan Amali 2)
-    const scoreHP4 = calculateWeightedScore(organizingA4 + positiveBehaviorKMI3, 30, 30); // Max 30 markah, 30% weight
-    const scoreHP5 = calculateWeightedScore(organizingA4Comm + nonVerbalCommKMK12, 30, 30); // Max 30 markah, 30% weight
-    const scoreHP3 = calculateWeightedScore(mechanismP4, 15, 15); // Max 15 markah, 15% weight
-    const scoreHP8 = calculateWeightedScore(valueAppreciationA5 + responsibilityKAT10, 30, 15); // Max 30 markah, 15% weight
-    const scoreExam = calculateWeightedScore(examScore, 10, 10); // Max 10 markah, 10% weight
-
-    // Kira jumlah keseluruhan markah
+    const scoreHP4 = calculateWeightedScore(organizingA4 + positiveBehaviorKMI3, 30, 30);
+    const scoreHP5 = calculateWeightedScore(organizingA4Comm + nonVerbalCommKMK12, 30, 30);
+    const scoreHP3 = calculateWeightedScore(mechanismP4, 15, 15);
+    const scoreHP8 = calculateWeightedScore(valueAppreciationA5 + responsibilityKAT10, 30, 15);
+    const scoreExam = calculateWeightedScore(examScore, 10, 10);
     const totalScore = scoreHP4 + scoreHP5 + scoreHP3 + scoreHP8 + scoreExam;
-
-    // Tentukan gred berdasarkan jadual baru
     const grade = determineGrade(totalScore);
 
-    // Paparkan keputusan dengan 2 tempat perpuluhan
     document.getElementById('resultStudentName').textContent = selectedStudent.name;
     document.getElementById('scoreHP4').textContent = scoreHP4.toFixed(2);
     document.getElementById('scoreHP5').textContent = scoreHP5.toFixed(2);
-    document.getElementById('scoreAmali2').textContent = (scoreHP3 + scoreHP8).toFixed(2); // Gabungan HP3 & HP8
+    document.getElementById('scoreAmali2').textContent = (scoreHP3 + scoreHP8).toFixed(2);
     document.getElementById('scoreExam').textContent = scoreExam.toFixed(2);
     document.getElementById('totalScore').textContent = totalScore.toFixed(2);
     document.getElementById('grade').textContent = grade;
 
-    // Tunjukkan bahagian keputusan
     document.getElementById('result').style.display = 'block';
 }
 
+// --- FUNGSI BARU UNTUK GOOGLE SHEET ---
 
-// --- FUNGSI UNTUK PENYIMPANAN DAN EKSPORT ---
-
-// Fungsi untuk menyimpan data markah dan catatan ke localStorage
-function saveData() {
+// Fungsi untuk menyimpan data ke Google Sheet
+async function saveData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
     if (!selectedStudentId) {
@@ -225,11 +199,17 @@ function saveData() {
         alert("Ralat: Maklumat pelajar tidak dijumpai.");
         return;
     }
+    
+    calculateScore();
 
-    // Kumpulkan data dari borang
     const dataToSave = {
         studentId: selectedStudentId,
-        // Markah
+        savedAt: new Date().toISOString(),
+        name: selectedStudent.name,
+        ic: selectedStudent.ic,
+        a_giliran: selectedStudent.a_giliran,
+        kelas: selectedStudent.kelas,
+        siri_big: selectedStudent.siri_big,
         organizingA4: parseFloat(document.getElementById('organizingA4').value) || null,
         positiveBehaviorKMI3: parseFloat(document.getElementById('positiveBehaviorKMI3').value) || null,
         organizingA4Comm: parseFloat(document.getElementById('organizingA4Comm').value) || null,
@@ -238,141 +218,93 @@ function saveData() {
         valueAppreciationA5: parseFloat(document.getElementById('valueAppreciationA5').value) || null,
         responsibilityKAT10: parseFloat(document.getElementById('responsibilityKAT10').value) || null,
         examScore: parseFloat(document.getElementById('examScore').value) || null,
-        // Catatan
         notesHP4: document.getElementById('notesHP4').value.trim(),
         notesHP5: document.getElementById('notesHP5').value.trim(),
         notesHP3: document.getElementById('notesHP3').value.trim(),
         notesHP8: document.getElementById('notesHP8').value.trim(),
         notesExam: document.getElementById('notesExam').value.trim(),
-        // Tarikh simpan
-        savedAt: new Date().toISOString()
+        scoreHP4: document.getElementById('scoreHP4').textContent,
+        scoreHP5: document.getElementById('scoreHP5').textContent,
+        scoreAmali2: document.getElementById('scoreAmali2').textContent,
+        scoreExamWeighted: document.getElementById('scoreExam').textContent,
+        totalScore: document.getElementById('totalScore').textContent,
+        grade: document.getElementById('grade').textContent
     };
 
-    // Dapatkan data yang sedia ada
-    let allSavedData = JSON.parse(localStorage.getItem('rubricData_v2')) || {};
-    // Simpan data untuk pelajar ini, menimpa data lama jika ada
-    allSavedData[selectedStudentId] = dataToSave;
-    // Simpan semula ke localStorage
-    localStorage.setItem('rubricData_v2', JSON.stringify(allSavedData));
+    const saveButton = document.getElementById('saveDataBtn');
+    saveButton.disabled = true;
+    saveButton.textContent = 'Menyimpan...';
 
-    alert("Data untuk pelajar ini telah disimpan!");
-    calculateScore(); // Kira semula untuk memastikan paparan terkini
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSave),
+            redirect: 'follow'
+        });
+        alert("Data untuk pelajar ini telah berjaya disimpan ke Google Sheet!");
+    } catch (error) {
+        console.error('Error saving data:', error);
+        alert("Gagal menyimpan data. Sila semak konsol untuk maklumat lanjut.");
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = 'Simpan Data';
+    }
 }
 
-// Fungsi untuk memuatkan data yang telah disimpan untuk pelajar tertentu
-function loadDataForStudent(studentId) {
-    const allSavedData = JSON.parse(localStorage.getItem('rubricData_v2')) || {};
-    const studentData = allSavedData[studentId];
+// Fungsi untuk memuatkan data dari Google Sheet
+async function loadDataForStudent(studentId) {
+    resetForm();
+    document.getElementById('result').style.display = 'none';
 
-    if (studentData) {
-        // Muatkan markah
-        document.getElementById('organizingA4').value = studentData.organizingA4 !== null ? studentData.organizingA4 : '';
-        document.getElementById('positiveBehaviorKMI3').value = studentData.positiveBehaviorKMI3 !== null ? studentData.positiveBehaviorKMI3 : '';
-        document.getElementById('organizingA4Comm').value = studentData.organizingA4Comm !== null ? studentData.organizingA4Comm : '';
-        document.getElementById('nonVerbalCommKMK12').value = studentData.nonVerbalCommKMK12 !== null ? studentData.nonVerbalCommKMK12 : '';
-        document.getElementById('mechanismP4').value = studentData.mechanismP4 !== null ? studentData.mechanismP4 : '';
-        document.getElementById('valueAppreciationA5').value = studentData.valueAppreciationA5 !== null ? studentData.valueAppreciationA5 : '';
-        document.getElementById('responsibilityKAT10').value = studentData.responsibilityKAT10 !== null ? studentData.responsibilityKAT10 : '';
-        document.getElementById('examScore').value = studentData.examScore !== null ? studentData.examScore : '';
+    try {
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?studentId=${studentId}`);
+        const result = await response.json();
 
-        // Muatkan catatan
-        document.getElementById('notesHP4').value = studentData.notesHP4 || '';
-        document.getElementById('notesHP5').value = studentData.notesHP5 || '';
-        document.getElementById('notesHP3').value = studentData.notesHP3 || '';
-        document.getElementById('notesHP8').value = studentData.notesHP8 || '';
-        document.getElementById('notesExam').value = studentData.notesExam || '';
-
-        // Jika borang kelihatan, kira semula markah
-        if (document.getElementById('rubricForm').style.display !== 'none') {
-             calculateScore();
+        if (result.result === 'success' && result.data) {
+            const studentData = result.data;
+            document.getElementById('organizingA4').value = studentData.organizingA4 !== null ? studentData.organizingA4 : '';
+            document.getElementById('positiveBehaviorKMI3').value = studentData.positiveBehaviorKMI3 !== null ? studentData.positiveBehaviorKMI3 : '';
+            document.getElementById('organizingA4Comm').value = studentData.organizingA4Comm !== null ? studentData.organizingA4Comm : '';
+            document.getElementById('nonVerbalCommKMK12').value = studentData.nonVerbalCommKMK12 !== null ? studentData.nonVerbalCommKMK12 : '';
+            document.getElementById('mechanismP4').value = studentData.mechanismP4 !== null ? studentData.mechanismP4 : '';
+            document.getElementById('valueAppreciationA5').value = studentData.valueAppreciationA5 !== null ? studentData.valueAppreciationA5 : '';
+            document.getElementById('responsibilityKAT10').value = studentData.responsibilityKAT10 !== null ? studentData.responsibilityKAT10 : '';
+            document.getElementById('examScore').value = studentData.examScore !== null ? studentData.examScore : '';
+            document.getElementById('notesHP4').value = studentData.notesHP4 || '';
+            document.getElementById('notesHP5').value = studentData.notesHP5 || '';
+            document.getElementById('notesHP3').value = studentData.notesHP3 || '';
+            document.getElementById('notesHP8').value = studentData.notesHP8 || '';
+            document.getElementById('notesExam').value = studentData.notesExam || '';
+            calculateScore();
+        } else {
+            console.log("Tiada data sedia ada untuk pelajar ini.");
         }
+    } catch (error) {
+        console.error('Error loading data:', error);
     }
-    // Jika tiada data disimpan, borang kekal kosong/reset
-}
-
-// Fungsi untuk mengeksport data ke Excel
-function exportToExcel() {
-    const allSavedData = JSON.parse(localStorage.getItem('rubricData_v2')) || {};
-    const exportData = [];
-
-    // Fungsi pembantu untuk mengira markah berpemberat (digunakan semula)
-    function calcWeightedScore(rawScore, maxRawScore, weightPercentage) {
-        if (isNaN(rawScore) || rawScore < 0) return 0;
-        if (rawScore > maxRawScore) rawScore = maxRawScore;
-        return (rawScore / maxRawScore) * weightPercentage;
-    }
-
-    // Proses setiap entri data yang disimpan
-    for (const studentIdStr in allSavedData) {
-        const studentId = parseInt(studentIdStr);
-        const data = allSavedData[studentIdStr];
-        const student = students.find(s => s.id === studentId);
-
-        if (student) { // Hanya eksport jika maklumat pelajar dijumpai
-            // Kira semula markah untuk tujuan eksport
-            const scoreHP4 = calcWeightedScore((data.organizingA4 || 0) + (data.positiveBehaviorKMI3 || 0), 30, 30);
-            const scoreHP5 = calcWeightedScore((data.organizingA4Comm || 0) + (data.nonVerbalCommKMK12 || 0), 30, 30);
-            const scoreHP3 = calcWeightedScore(data.mechanismP4 || 0, 15, 15);
-            const scoreHP8 = calcWeightedScore((data.valueAppreciationA5 || 0) + (data.responsibilityKAT10 || 0), 30, 15);
-            const scoreExam = calcWeightedScore(data.examScore || 0, 10, 10);
-            const totalWeightedScore = scoreHP4 + scoreHP5 + scoreHP3 + scoreHP8 + scoreExam;
-
-            exportData.push({
-                "Nama_Pelajar": student.name,
-                "No_IC": student.ic,
-                "No_Giliran": student.a_giliran,
-                "Kelas": student.kelas,
-                "Siri": student.siri_big,
-                "HP4_Markah_Bahan": data.organizingA4,
-                "HP4_Markah_Tingkah_Laku": data.positiveBehaviorKMI3,
-                "HP4_Jumlah_Markah": scoreHP4.toFixed(2),
-                "Catatan_HP4": data.notesHP4,
-                "HP5_Markah_Bahan": data.organizingA4Comm,
-                "HP5_Markah_Komunikasi": data.nonVerbalCommKMK12,
-                "HP5_Jumlah_Markah": scoreHP5.toFixed(2),
-                "Catatan_HP5": data.notesHP5,
-                "HP3_Markah_Mekanisma": data.mechanismP4,
-                "HP3_Jumlah_Markah": scoreHP3.toFixed(2),
-                "Catatan_HP3": data.notesHP3,
-                "HP8_Markah_Nilai": data.valueAppreciationA5,
-                "HP8_Markah_Tanggungjawab": data.responsibilityKAT10,
-                "HP8_Jumlah_Markah": scoreHP8.toFixed(2),
-                "Catatan_HP8": data.notesHP8,
-                "Ujian_Markah": data.examScore,
-                "Ujian_Jumlah_Markah": scoreExam.toFixed(2),
-                "Catatan_Ujian": data.notesExam,
-                "Jumlah_Keseluruhan_Markah": totalWeightedScore.toFixed(2),
-                "Tarikh_Simpan": data.savedAt ? new Date(data.savedAt).toLocaleString() : ''
-            });
-        }
-    }
-
-    if (exportData.length === 0) {
-        alert("Tiada data pelajar yang sah untuk dieksport.");
-        return;
-    }
-
-    // Buat workbook dan worksheet menggunakan SheetJS
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Markah_Rubrik");
-
-    // Jana nama fail
-    const filename = `Markah_Rubrik_MPU2082_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
-    // Muat turun fail
-    XLSX.writeFile(wb, filename);
-    alert(`Data telah dieksport ke ${filename}`);
 }
 
 // Muatkan senarai pelajar dan pilihan penapis apabila halaman dimuatkan
 document.addEventListener('DOMContentLoaded', function() {
-    loadFilterOptions(); // Muatkan pilihan kelas dan siri
-    loadStudents(); // Muatkan semua pelajar pada mulanya
+    loadFilterOptions();
+    loadStudents();
 
-    // Tambah event listener
     document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
     document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
     document.getElementById('saveDataBtn').addEventListener('click', saveData);
     document.getElementById('calculateScoreBtn').addEventListener('click', calculateScore);
-    document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+    
+    // Anda boleh padamkan event listener untuk butang eksport jika anda telah memadamnya dari HTML
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+       // Cadangan: Tukar fungsi butang untuk membuka Google Sheet
+       exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
+       exportBtn.addEventListener('click', () => {
+            // Gantikan dengan URL Google Sheet anda
+            window.open('URL_GOOGLE_SHEET_ANDA', '_blank');
+       });
+    }
 });
