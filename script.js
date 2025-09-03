@@ -33,17 +33,14 @@ const GRADE_SCALE = [
 // URL Apps Script anda
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzo_nfMUAWyBstQdpsPFlL2l1cwhsLrPyUfKvOgFzeICQ7kg7XgcOaHFmDIErkvZNb3/exec';
 
+let allStudents = [];
 let filteredStudents = [];
 let uniqueClasses = [];
 let uniqueSeries = [];
 
-// =======================================================
-// KANDUNGAN FUNGSI PENUH
-// =======================================================
-
 function getUniqueFilters() {
-    uniqueClasses = [...new Set(students.map(student => student.kelas).filter(Boolean))].sort();
-    uniqueSeries = [...new Set(students.map(student => student.siri_big).filter(Boolean))].sort();
+    uniqueClasses = [...new Set(allStudents.map(student => student.kelas).filter(Boolean))].sort();
+    uniqueSeries = [...new Set(allStudents.map(student => student.siri_big).filter(Boolean))].sort();
 }
 
 function loadFilterOptions() {
@@ -66,7 +63,7 @@ function loadFilterOptions() {
     });
 }
 
-function loadStudents(studentsToLoad = students) {
+function loadStudents(studentsToLoad) {
     const studentSelect = document.getElementById('studentSelect');
     studentSelect.innerHTML = '<option value="" selected disabled>Pilih seorang pelajar</option>';
     studentsToLoad.forEach(student => {
@@ -80,7 +77,7 @@ function loadStudents(studentsToLoad = students) {
 function applyFilters() {
     const classFilter = document.getElementById('classFilter').value;
     const seriesFilter = document.getElementById('seriesFilter').value;
-    filteredStudents = students.filter(student => {
+    filteredStudents = allStudents.filter(student => {
         const matchClass = !classFilter || (student.kelas && student.kelas === classFilter);
         const matchSeries = !seriesFilter || (student.siri_big && student.siri_big === seriesFilter);
         return matchClass && matchSeries;
@@ -98,7 +95,7 @@ function onStudentSelectChange() {
     const resultDiv = document.getElementById('result');
 
     if (selectedStudentId) {
-        const selectedStudent = students.find(student => student.id === selectedStudentId);
+        const selectedStudent = allStudents.find(student => student.id === selectedStudentId);
         if (selectedStudent) {
             document.getElementById('selectedStudentName').textContent = selectedStudent.name;
             document.getElementById('selectedStudentIC').textContent = selectedStudent.ic;
@@ -148,7 +145,7 @@ function calculateScore() {
     const selectedStudentId = parseInt(studentSelect.value);
     if (!selectedStudentId) return;
 
-    const selectedStudent = students.find(student => student.id === selectedStudentId);
+    const selectedStudent = allStudents.find(student => student.id === selectedStudentId);
     if (!selectedStudent) return;
 
     const organizingA4 = parseFloat(document.getElementById('organizingA4').value) || 0;
@@ -186,7 +183,7 @@ async function saveData() {
         return;
     }
 
-    const selectedStudent = students.find(student => student.id === selectedStudentId);
+    const selectedStudent = allStudents.find(student => student.id === selectedStudentId);
     if (!selectedStudent) {
         showToast("Ralat", "Maklumat pelajar tidak dijumpai.", true);
         return;
@@ -278,9 +275,22 @@ async function loadDataForStudent(studentId) {
     }
 }
 
-// =======================================================
-// LOGIK LOG MASUK DAN PERMULAAN APLIKASI
-// =======================================================
+async function fetchStudents() {
+    try {
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getStudents`);
+        const result = await response.json();
+        if (result.result === 'success') {
+            return result.data;
+        } else {
+            console.error('Gagal memuatkan senarai pelajar dari Google Sheet:', result.message);
+            return []; // Kembalikan array kosong jika gagal
+        }
+    } catch (error) {
+        console.error('Ralat semasa memuatkan senarai pelajar:', error);
+        return []; // Kembalikan array kosong jika ralat
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const loginContainer = document.getElementById('loginContainer');
@@ -288,25 +298,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordInput = document.getElementById('passwordInput');
     const loginBtn = document.getElementById('loginBtn');
 
-    function initializeApp() {
-        console.log("Aplikasi dimulakan...");
-        loadFilterOptions();
-        loadStudents();
-        document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
-        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+    async function initializeApp() {
+        console.log("Memuatkan senarai pelajar...");
+        showToast("Memuatkan", "Sila tunggu sebentar, senarai pelajar sedang dimuatkan...");
         
-        const saveDataBtn = document.getElementById('saveDataBtn');
-        if(saveDataBtn) saveDataBtn.addEventListener('click', saveData);
+        allStudents = await fetchStudents();
+        
+        if (allStudents.length > 0) {
+            console.log("Aplikasi dimulakan...");
+            loadFilterOptions();
+            loadStudents(allStudents);
+            document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
+            document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+            
+            const saveDataBtn = document.getElementById('saveDataBtn');
+            if(saveDataBtn) saveDataBtn.addEventListener('click', saveData);
 
-        const calculateScoreBtn = document.getElementById('calculateScoreBtn');
-        if(calculateScoreBtn) calculateScoreBtn.addEventListener('click', calculateScore);
-        
-        const exportBtn = document.getElementById('exportBtn');
-        if (exportBtn) {
-           exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
-           exportBtn.addEventListener('click', () => {
-                window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
-           });
+            const calculateScoreBtn = document.getElementById('calculateScoreBtn');
+            if(calculateScoreBtn) calculateScoreBtn.addEventListener('click', calculateScore);
+            
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) {
+               exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
+               exportBtn.addEventListener('click', () => {
+                    window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
+               });
+            }
+            showToast("Berjaya", "Senarai pelajar berjaya dimuatkan!");
+        } else {
+            showToast("Gagal", "Tidak dapat memuatkan senarai pelajar. Sila semak Apps Script atau muat semula halaman.", true);
         }
     }
 
@@ -314,17 +334,3 @@ document.addEventListener('DOMContentLoaded', function() {
         if (passwordInput.value === CORRECT_PASSWORD) {
             loginContainer.classList.add('d-none');
             mainContent.classList.remove('d-none');
-            initializeApp(); 
-        } else {
-            showToast("Gagal", "Kata laluan salah. Sila cuba lagi.", true);
-            passwordInput.value = "";
-        }
-    }
-
-    loginBtn.addEventListener('click', handleLogin);
-    passwordInput.addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
-            handleLogin();
-        }
-    });
-});
