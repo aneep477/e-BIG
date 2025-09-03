@@ -23,6 +23,58 @@
     </div>
 
     <div id="mainContent" class="container mt-5 mb-5 d-none">
+        <div class="row align-items-center mb-4">
+            <div class="col-auto">
+                <img src="https://i.imgur.com/K4Gy3WN.png" alt="Logo" class="img-fluid" style="max-height: 80px;">
+            </div>
+            <div class="col text-center">
+                <h1 class="mb-2">Sistem Pemarkahan BIG - MPU2082</h1>
+                <h2 class="mb-0 h4">(PDPP Ambilan Oktober 2024)</h2>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h3>Saring Pelajar</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="classFilter" class="form-label">Kelas:</label>
+                        <select class="form-select" id="classFilter">
+                            <option value="">Semua Kelas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="seriesFilter" class="form-label">Siri:</label>
+                        <select class="form-select" id="seriesFilter">
+                            <option value="">Semua Siri</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary" id="applyFiltersBtn">Gunakan Saringan</button>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h3>Pilih Pelajar</h3>
+            </div>
+            <div class="card-body">
+                <label for="studentSelect" class="form-label">Senarai Pelajar:</label>
+                <select class="form-select" id="studentSelect" name="studentSelect">
+                    <option value="" selected disabled>Pilih seorang pelajar</option>
+                </select>
+                <div id="studentInfo" class="mt-2" style="display:none;">
+                    <p class="mb-1"><strong>Nama:</strong> <span id="selectedStudentName"></span></p>
+                    <p class="mb-1"><strong>No. IC:</strong> <span id="selectedStudentIC"></span></p>
+                    <p class="mb-1"><strong>No. Giliran:</strong> <span id="selectedStudentAGiliran"></span></p>
+                    <p class="mb-1"><strong>Kelas:</strong> <span id="selectedStudentClass"></span></p>
+                    <p class="mb-1"><strong>Siri:</strong> <span id="selectedStudentSeries"></span></p>
+                </div>
+            </div>
+        </div>
+
         <form id="rubricForm" style="display:none;">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -44,12 +96,115 @@
                     </div>
                 </div>
             </div>
-            </form>
 
+            <div class="card mb-4">
+                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">HP5: Kemahiran Komunikasi (30%)</h3>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#hp5Modal">Lihat Rubrik</button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="organizingA4Comm" class="form-label">Mengorganisasi (A4) (15%)</label>
+                        <input type="number" class="form-control" id="organizingA4Comm" name="organizingA4Comm" min="0" max="15" step="0.1" placeholder="Masukkan markah (0-15)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nonVerbalCommKMK12" class="form-label">Menggunakan kemahiran komunikasi bukan lisan (KMK12) (15%)</label>
+                        <input type="number" class="form-control" id="nonVerbalCommKMK12" name="nonVerbalCommKMK12" min="0" max="15" step="0.1" placeholder="Masukkan markah (0-15)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="notesHP5" class="form-label">Catatan HP5:</label>
+                        <textarea class="form-control" id="notesHP5" name="notesHP5" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white"><h3 class="mb-0">Amali 2: 30%</h3></div>
+                <div class="card-body">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">HP3: Kemahiran Praktikal (15%)</h5>
+                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#hp3Modal">Lihat Rubrik</button>
+                    </div>
+                     <div class="card-body">
+                        <div class="mb-3">
+                            <label for="mechanismP4" class="form-label">Mekanisme (P4) (15%)</label>
+                            <input type="number" class="form-control" id="mechanismP4" name="mechanismP4" min="0" max="15" step="0.1" placeholder="Masukkan markah (0-15)">
+                        </div>
+                        <div class="mb-3">
+                            <label for="notesHP3" class="form-label">Catatan HP3:</label>
+                            <textarea class="form-control" id="notesHP3" name="notesHP3" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                         <h5 class="mb-0">HP8: Kepimpinan, Autonomi & Tanggungjawab (15%)</h5>
+                         <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#hp8Modal">Lihat Rubrik</button>
+                    </div>
+                     <div class="card-body">
+                         <div class="mb-3">
+                            <label for="valueAppreciationA5" class="form-label">Menghayati nilai A5 (15%)</label>
+                            <input type="number" class="form-control" id="valueAppreciationA5" name="valueAppreciationA5" min="0" max="15" step="0.1" placeholder="Masukkan markah (0-15)">
+                        </div>
+                        <div class="mb-3">
+                            <label for="responsibilityKAT10" class="form-label">Bertanggungjawab laksanakan amanah (KAT10) (15%)</label>
+                            <input type="number" class="form-control" id="responsibilityKAT10" name="responsibilityKAT10" min="0" max="15" step="0.1" placeholder="Masukkan markah (0-15)">
+                        </div>
+                         <div class="mb-3">
+                            <label for="notesHP8" class="form-label">Catatan HP8:</label>
+                            <textarea class="form-control" id="notesHP8" name="notesHP8" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+             <div class="card mb-4">
+                <div class="card-header bg-warning text-dark"><h3 class="mb-0">Ujian: 10%</h3></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="examScore" class="form-label">Markah Ujian (10%)</label>
+                        <input type="number" class="form-control" id="examScore" name="examScore" min="0" max="10" step="0.1" placeholder="Masukkan markah (0-10)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="notesExam" class="form-label">Catatan Ujian:</label>
+                        <textarea class="form-control" id="notesExam" name="notesExam" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+                <button type="button" class="btn btn-success me-md-2" id="saveDataBtn">Simpan Data</button>
+                <button type="button" class="btn btn-primary" id="calculateScoreBtn">Kira Markah</button>
+            </div>
+        </form>
+
+        <div id="result" class="mt-4 p-3 border rounded bg-light" style="display:none;">
+            <h3>Keputusan untuk <span id="resultStudentName"></span></h3>
+            <p><strong>Markah HP4:</strong> <span id="scoreHP4">0.00</span> / 30.00</p>
+            <p><strong>Markah HP5:</strong> <span id="scoreHP5">0.00</span> / 30.00</p>
+            <p><strong>Markah Amali 2:</strong> <span id="scoreAmali2">0.00</span> / 30.00</p>
+            <p><strong>Markah Ujian:</strong> <span id="scoreExam">0.00</span> / 10.00</p>
+            <hr>
+            <p><strong>Jumlah Markah:</strong> <span id="totalScore">0.00</span> / 100.00</p>
+            <p><strong>Gred:</strong> <span id="grade">-</span></p>
         </div>
 
+        <div class="text-center mt-4">
+            <button type="button" class="btn btn-info btn-lg" id="exportBtn">Buka Pangkalan Data</button>
+        </div>
+        
+        <footer class="text-center mt-4 text-muted">© 2025 Haniff Faizal</footer>
+    </div>
+
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto" id="toastTitle"></strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastBody">
+        </div>
       </div>
+    </div>
     
     <div class="modal fade" id="hp4Modal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -73,19 +228,19 @@
                         <tbody>
                             <tr>
                                 <td><strong>Mengorganisasi (A4)</strong></td>
-                                [cite_start]<td>Mampu merancang, menyusun dan menyelaras aktiviti dengan berkesan; melibatkan semua ahli pasukan secara harmoni. [cite: 2]</td>
-                                [cite_start]<td>Mengorganisasi aktiviti dengan teratur, menunjukkan komunikasi yang baik dalam kumpulan. [cite: 2]</td>
-                                [cite_start]<td>Menunjukkan usaha bekerjasama dengan baik dalam kumpulan, pembahagian tugasan agak seimbang. [cite: 2]</td>
-                                [cite_start]<td>Mengorganisasi secara tidak konsisten dan memerlukan bantuan dalam menyusun tugasan; komunikasi kurang jelas. [cite: 2]</td>
-                                [cite_start]<td>Gagal menunjukkan kemahiran mengorganisasi; tidak dapat merancang atau menyusun aktiviti dengan baik. [cite: 2]</td>
+                                <td>Mampu merancang, menyusun dan menyelaras aktiviti dengan berkesan; melibatkan semua ahli pasukan secara harmoni.</td>
+                                <td>Mengorganisasi aktiviti dengan teratur, menunjukkan komunikasi yang baik dalam kumpulan.</td>
+                                <td>Menunjukkan usaha bekerjasama dengan baik dalam kumpulan, pembahagian tugasan agak seimbang.</td>
+                                <td>Mengorganisasi secara tidak konsisten dan memerlukan bantuan dalam menyusun tugasan; komunikasi kurang jelas.</td>
+                                <td>Gagal menunjukkan kemahiran mengorganisasi; tidak dapat merancang atau menyusun aktiviti dengan baik.</td>
                             </tr>
                             <tr>
                                 <td><strong>Mengamalkan tingkahlaku positif (KMI3)</strong></td>
-                                [cite_start]<td>Sentiasa menunjukkan sikap positif seperti bekerjasama dan empati secara konsisten; menjadi contoh teladan. [cite: 2]</td>
-                                [cite_start]<td>Kerap menunjukkan tingkah laku positif dan kemahiran interpersonal yang baik seperti membantu rakan. [cite: 2]</td>
-                                [cite_start]<td>Menunjukkan tingkah laku positif dalam kebanyakan situasi tetapi kadangkala memerlukan peringatan. [cite: 2]</td>
-                                [cite_start]<td>Menunjukkan tingkah laku positif secara minimum; perlukan dorongan berterusan daripada fasilitator. [cite: 2]</td>
-                                [cite_start]<td>Jarang atau tidak menunjukkan tingkah laku positif, sering menimbulkan konflik atau mengasingkan diri. [cite: 2]</td>
+                                <td>Sentiasa menunjukkan sikap positif seperti bekerjasama dan empati secara konsisten; menjadi contoh teladan.</td>
+                                <td>Kerap menunjukkan tingkah laku positif dan kemahiran interpersonal yang baik seperti membantu rakan.</td>
+                                <td>Menunjukkan tingkah laku positif dalam kebanyakan situasi tetapi kadangkala memerlukan peringatan.</td>
+                                <td>Menunjukkan tingkah laku positif secara minimum; perlukan dorongan berterusan daripada fasilitator.</td>
+                                <td>Jarang atau tidak menunjukkan tingkah laku positif, sering menimbulkan konflik atau mengasingkan diri.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -93,7 +248,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="hp5Modal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
@@ -116,19 +270,19 @@
                         <tbody>
                             <tr>
                                 <td><strong>Mengorganisasi (A4)</strong></td>
-                                [cite_start]<td>Mampu menyampaikan arahan dan maklumat dengan sangat jelas, tepat dan meyakinkan dalam semua situasi. [cite: 6]</td>
-                                [cite_start]<td>Berkomunikasi dengan jelas dan teratur dalam kebanyakan situasi. [cite: 6]</td>
-                                [cite_start]<td>Berkomunikasi secara sederhana, kadangkala tidak jelas tetapi masih dapat difahami. [cite: 6]</td>
-                                <td>Komunikasi kurang jelas dan kadang-kadang mengelirukan. [cite_start]Kurang keyakinan untuk berkomunikasi. [cite: 6]</td>
-                                [cite_start]<td>Gagal berkomunikasi dengan berkesan; tidak memberi arahan yang jelas. [cite: 6]</td>
+                                <td>Mampu menyampaikan arahan dan maklumat dengan sangat jelas, tepat dan meyakinkan dalam semua situasi.</td>
+                                <td>Berkomunikasi dengan jelas dan teratur dalam kebanyakan situasi.</td>
+                                <td>Berkomunikasi secara sederhana, kadangkala tidak jelas tetapi masih dapat difahami.</td>
+                                <td>Komunikasi kurang jelas dan kadang-kadang mengelirukan. Kurang keyakinan untuk berkomunikasi.</td>
+                                <td>Gagal berkomunikasi dengan berkesan; tidak memberi arahan yang jelas.</td>
                             </tr>
                             <tr>
                                 <td><strong>Menggunakan kemahiran komunikasi bukan lisan (KMK12)</strong></td>
-                                [cite_start]<td>Sentiasa menggunakan isyarat bukan lisan (bahasa tubuh, kontak mata) yang jelas, sopan dan sesuai untuk menyokong komunikasi. [cite: 6]</td>
-                                [cite_start]<td>Kerap menggunakan komunikasi bukan lisan dengan baik dan memberi respon yang sesuai. [cite: 6]</td>
-                                [cite_start]<td>Menunjukkan penggunaan komunikasi bukan lisan yang sesuai dalam kebanyakan keadaan, tetapi kadangkala kurang jelas. [cite: 6]</td>
-                                [cite_start]<td>Menggunakan komunikasi bukan lisan secara terhad; kadangkala tidak sesuai atau menyebabkan kekeliruan. [cite: 6]</td>
-                                [cite_start]<td>Jarang atau tidak menggunakan komunikasi bukan lisan secara berkesan; bahasa tubuh bertentangan dengan mesej. [cite: 6]</td>
+                                <td>Sentiasa menggunakan isyarat bukan lisan (bahasa tubuh, kontak mata) yang jelas, sopan dan sesuai untuk menyokong komunikasi.</td>
+                                <td>Kerap menggunakan komunikasi bukan lisan dengan baik dan memberi respon yang sesuai.</td>
+                                <td>Menunjukkan penggunaan komunikasi bukan lisan yang sesuai dalam kebanyakan keadaan, tetapi kadangkala kurang jelas.</td>
+                                <td>Menggunakan komunikasi bukan lisan secara terhad; kadangkala tidak sesuai atau menyebabkan kekeliruan.</td>
+                                <td>Jarang atau tidak menggunakan komunikasi bukan lisan secara berkesan; bahasa tubuh bertentangan dengan mesej.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -136,7 +290,6 @@
             </div>
         </div>
     </div>
-    
     <div class="modal fade" id="hp3Modal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
@@ -159,11 +312,11 @@
                         <tbody>
                             <tr>
                                 <td><strong>Mekanisme (P4)</strong></td>
-                                [cite_start]<td>Menggunakan semua peralatan dengan sangat cekap, tepat, dan mengikut prosedur serta menunjukkan kefahaman mendalam. [cite: 13, 14, 15] [cite_start]Sentiasa membantu rakan secara proaktif. [cite: 16, 21]</td>
-                                [cite_start]<td>Mengendalikan peralatan dengan berkesan dan mengikut prosedur yang betul. [cite: 27, 29, 30] [cite_start]Menunjukkan kefahaman yang baik tentang fungsi peralatan. [cite: 33]</td>
-                                [cite_start]<td>Menggunakan peralatan dengan keberkesanan sederhana, tetapi terdapat sedikit kesilapan. [cite: 32, 39] [cite_start]Masih memerlukan bimbingan ringan. [cite: 52]</td>
-                                [cite_start]<td>Penggunaan mekanisme tidak konsisten, kadangkala tidak mengikut prosedur atau salah guna peralatan. [cite: 42, 43, 44] [cite_start]Memerlukan pemantauan dan bantuan berterusan. [cite: 45]</td>
-                                [cite_start]<td>Gagal menggunakan mekanisme dengan betul, tidak memahami fungsi peralatan, atau menunjukkan sikap sambil lewa terhadap keselamatan. [cite: 47, 49, 50]</td>
+                                <td>Menggunakan semua peralatan dengan sangat cekap, tepat, dan mengikut prosedur serta menunjukkan kefahaman mendalam. Sentiasa membantu rakan secara proaktif.</td>
+                                <td>Mengendalikan peralatan dengan berkesan dan mengikut prosedur yang betul. Menunjukkan kefahaman yang baik tentang fungsi peralatan.</td>
+                                <td>Menggunakan peralatan dengan keberkesanan sederhana, tetapi terdapat sedikit kesilapan. Masih memerlukan bimbingan ringan.</td>
+                                <td>Penggunaan mekanisme tidak konsisten, kadangkala tidak mengikut prosedur atau salah guna peralatan. Memerlukan pemantauan dan bantuan berterusan.</td>
+                                <td>Gagal menggunakan mekanisme dengan betul, tidak memahami fungsi peralatan, atau menunjukkan sikap sambil lewa terhadap keselamatan.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -171,7 +324,6 @@
             </div>
         </div>
     </div>
-
     <div class="modal fade" id="hp8Modal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
@@ -194,19 +346,19 @@
                         <tbody>
                             <tr>
                                 <td><strong>Menghayati nilai (A5)</strong></td>
-                                [cite_start]<td>Menunjukkan kepimpinan yang jelas, berinisiatif tinggi, dan sentiasa mengamalkan nilai-nilai murni dalam setiap aktiviti. [cite: 54]</td>
-                                [cite_start]<td>Memimpin dengan baik dalam aktiviti kumpulan dan mengamalkan nilai-nilai murni dengan konsisten. [cite: 54]</td>
-                                [cite_start]<td>Menunjukkan kemahiran kepimpinan secara sederhana dan kadangkala kurang konsisten dalam menghayati nilai-nilai murni. [cite: 54]</td>
-                                [cite_start]<td>Kepimpinan dan autonomi masih lemah, sering menunggu arahan dan kurang menghayati nilai-nilai. [cite: 54]</td>
-                                [cite_start]<td>Tidak menunjukkan ciri kepimpinan, gagal bertindak secara autonomi dan tidak menghayati nilai-nilai. [cite: 54]</td>
+                                <td>Menunjukkan kepimpinan yang jelas, berinisiatif tinggi, dan sentiasa mengamalkan nilai-nilai murni dalam setiap aktiviti.</td>
+                                <td>Memimpin dengan baik dalam aktiviti kumpulan dan mengamalkan nilai-nilai murni dengan konsisten.</td>
+                                <td>Menunjukkan kemahiran kepimpinan secara sederhana dan kadangkala kurang konsisten dalam menghayati nilai-nilai murni.</td>
+                                <td>Kepimpinan dan autonomi masih lemah, sering menunggu arahan dan kurang menghayati nilai-nilai.</td>
+                                <td>Tidak menunjukkan ciri kepimpinan, gagal bertindak secara autonomi dan tidak menghayati nilai-nilai.</td>
                             </tr>
                             <tr>
                                 <td><strong>Bertanggungjawab laksanakan amanah (KAT10)</strong></td>
-                                <td>Melaksanakan setiap tanggungjawab dengan penuh integriti. [cite_start]Menunjukkan kepimpinan cemerlang dan proaktif. [cite: 54]</td>
-                                [cite_start]<td>Melaksanakan tugasan dan amanah dengan baik dan berdedikasi, serta membantu rakan pasukan. [cite: 54]</td>
-                                [cite_start]<td>Menunjukkan usaha yang baik dalam melaksanakan amanah diri, tetapi kurang inisiatif dalam pasukan. [cite: 54]</td>
-                                [cite_start]<td>Melaksanakan tugas dengan kurang konsisten, kerap menunggu arahan dan hanya fokus pada tugasan sendiri. [cite: 54]</td>
-                                [cite_start]<td>Tidak melaksanakan amanah dengan baik, tiada rasa bertanggungjawab dan memberi kesan negatif terhadap kumpulan. [cite: 54]</td>
+                                <td>Melaksanakan setiap tanggungjawab dengan penuh integriti. Menunjukkan kepimpinan cemerlang dan proaktif.</td>
+                                <td>Melaksanakan tugasan dan amanah dengan baik dan berdedikasi, serta membantu rakan pasukan.</td>
+                                <td>Menunjukkan usaha yang baik dalam melaksanakan amanah diri, tetapi kurang inisiatif dalam pasukan.</td>
+                                <td>Melaksanakan tugas dengan kurang konsisten, kerap menunggu arahan dan hanya fokus pada tugasan sendiri.</td>
+                                <td>Tidak melaksanakan amanah dengan baik, tiada rasa bertanggungjawab dan memberi kesan negatif terhadap kumpulan.</td>
                             </tr>
                         </tbody>
                     </table>
