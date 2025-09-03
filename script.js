@@ -114,12 +114,15 @@ function onStudentSelectChange() {
 
 function resetForm() {
     document.getElementById('rubricForm').reset();
-    document.getElementById('scoreHP4').textContent = '0.00';
-    document.getElementById('scoreHP5').textContent = '0.00';
-    document.getElementById('scoreAmali2').textContent = '0.00';
-    document.getElementById('scoreExam').textContent = '0.00';
-    document.getElementById('totalScore').textContent = '0.00';
-    document.getElementById('grade').textContent = '-';
+    const resultDiv = document.getElementById('result');
+    if (resultDiv) {
+        document.getElementById('scoreHP4').textContent = '0.00';
+        document.getElementById('scoreHP5').textContent = '0.00';
+        document.getElementById('scoreAmali2').textContent = '0.00';
+        document.getElementById('scoreExam').textContent = '0.00';
+        document.getElementById('totalScore').textContent = '0.00';
+        document.getElementById('grade').textContent = '-';
+    }
 }
 
 function calculateWeightedScore(rawScore, maxRawScore, weightPercentage) {
@@ -149,62 +152,105 @@ function calculateScore() {
 
     const organizingA4 = parseFloat(document.getElementById('organizingA4').value) || 0;
     const positiveBehaviorKMI3 = parseFloat(document.getElementById('positiveBehaviorKMI3').value) || 0;
-    // ... (bahagian pengiraan lain kekal sama)
+    const organizingA4Comm = parseFloat(document.getElementById('organizingA4Comm').value) || 0;
+    const nonVerbalCommKMK12 = parseFloat(document.getElementById('nonVerbalCommKMK12').value) || 0;
+    const mechanismP4 = parseFloat(document.getElementById('mechanismP4').value) || 0;
+    const valueAppreciationA5 = parseFloat(document.getElementById('valueAppreciationA5').value) || 0;
+    const responsibilityKAT10 = parseFloat(document.getElementById('responsibilityKAT10').value) || 0;
+    const examScore = parseFloat(document.getElementById('examScore').value) || 0;
+
+    const scoreHP4 = calculateWeightedScore(organizingA4 + positiveBehaviorKMI3, 30, 30);
+    const scoreHP5 = calculateWeightedScore(organizingA4Comm + nonVerbalCommKMK12, 30, 30);
+    const scoreHP3 = calculateWeightedScore(mechanismP4, 15, 15);
+    const scoreHP8 = calculateWeightedScore(valueAppreciationA5 + responsibilityKAT10, 30, 15);
+    const scoreExam = calculateWeightedScore(examScore, 10, 10);
+    const totalScore = scoreHP4 + scoreHP5 + scoreHP3 + scoreHP8 + scoreExam;
+    const grade = determineGrade(totalScore);
+
+    document.getElementById('resultStudentName').textContent = selectedStudent.name;
+    document.getElementById('scoreHP4').textContent = scoreHP4.toFixed(2);
+    document.getElementById('scoreHP5').textContent = scoreHP5.toFixed(2);
+    document.getElementById('scoreAmali2').textContent = (scoreHP3 + scoreHP8).toFixed(2);
+    document.getElementById('scoreExam').textContent = scoreExam.toFixed(2);
+    document.getElementById('totalScore').textContent = totalScore.toFixed(2);
+    document.getElementById('grade').textContent = grade;
+    document.getElementById('result').style.display = 'block';
 }
 
 async function saveData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
-    // ... (kandungan fungsi saveData kekal sama)
+    if (!selectedStudentId) {
+        showToast("Ralat", "Sila pilih seorang pelajar dahulu.", true);
+        return;
+    }
+
+    const selectedStudent = students.find(student => student.id === selectedStudentId);
+    if (!selectedStudent) {
+        showToast("Ralat", "Maklumat pelajar tidak dijumpai.", true);
+        return;
+    }
+    
+    calculateScore();
+
+    const dataToSave = {
+        studentId: selectedStudentId,
+        savedAt: new Date().toISOString(),
+        name: selectedStudent.name,
+        ic: selectedStudent.ic,
+        a_giliran: selectedStudent.a_giliran,
+        kelas: selectedStudent.kelas,
+        siri_big: selectedStudent.siri_big,
+        organizingA4: parseFloat(document.getElementById('organizingA4').value) || null,
+        positiveBehaviorKMI3: parseFloat(document.getElementById('positiveBehaviorKMI3').value) || null,
+        organizingA4Comm: parseFloat(document.getElementById('organizingA4Comm').value) || null,
+        nonVerbalCommKMK12: parseFloat(document.getElementById('nonVerbalCommKMK12').value) || null,
+        mechanismP4: parseFloat(document.getElementById('mechanismP4').value) || null,
+        valueAppreciationA5: parseFloat(document.getElementById('valueAppreciationA5').value) || null,
+        responsibilityKAT10: parseFloat(document.getElementById('responsibilityKAT10').value) || null,
+        examScore: parseFloat(document.getElementById('examScore').value) || null,
+        notesHP4: document.getElementById('notesHP4').value.trim(),
+        notesHP5: document.getElementById('notesHP5').value.trim(),
+        notesHP3: document.getElementById('notesHP3').value.trim(),
+        notesHP8: document.getElementById('notesHP8').value.trim(),
+        notesExam: document.getElementById('notesExam').value.trim(),
+        scoreHP4: document.getElementById('scoreHP4').textContent,
+        scoreHP5: document.getElementById('scoreHP5').textContent,
+        scoreAmali2: document.getElementById('scoreAmali2').textContent,
+        scoreExamWeighted: document.getElementById('scoreExam').textContent,
+        totalScore: document.getElementById('totalScore').textContent,
+        grade: document.getElementById('grade').textContent
+    };
+
+    const saveButton = document.getElementById('saveDataBtn');
+    saveButton.disabled = true;
+    saveButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...`;
+
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSave),
+            redirect: 'follow'
+        });
+        showToast("Berjaya", `Data untuk ${selectedStudent.name} telah disimpan!`);
+    } catch (error) {
+        console.error('Error saving data:', error);
+        showToast("Gagal", "Gagal menyimpan data. Sila semak sambungan internet anda.", true);
+    } finally {
+        saveButton.disabled = false;
+        saveButton.innerHTML = 'Simpan Data';
+    }
 }
 
 async function loadDataForStudent(studentId) {
     resetForm();
     document.getElementById('result').style.display = 'none';
-    // ... (kandungan fungsi loadDataForStudent kekal sama)
-}
 
+    try {
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?studentId=${studentId}`);
+        const result = await response.json();
 
-document.addEventListener('DOMContentLoaded', function() {
-    const loginContainer = document.getElementById('loginContainer');
-    const mainContent = document.getElementById('mainContent');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-
-    function initializeApp() {
-        console.log("Aplikasi dimulakan...");
-        loadFilterOptions();
-        loadStudents();
-        document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
-        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-        document.getElementById('saveDataBtn').addEventListener('click', saveData);
-        document.getElementById('calculateScoreBtn').addEventListener('click', calculateScore);
-        
-        const exportBtn = document.getElementById('exportBtn');
-        if (exportBtn) {
-           exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
-           exportBtn.addEventListener('click', () => {
-                window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
-           });
-        }
-    }
-
-    function handleLogin() {
-        if (passwordInput.value === CORRECT_PASSWORD) {
-            loginContainer.classList.add('d-none');
-            mainContent.classList.remove('d-none');
-            // **BARIS YANG HILANG SEBELUM INI TELAH DITAMBAH SEMULA**
-            initializeApp(); 
-        } else {
-            showToast("Gagal", "Kata laluan salah. Sila cuba lagi.", true);
-            passwordInput.value = "";
-        }
-    }
-
-    loginBtn.addEventListener('click', handleLogin);
-    passwordInput.addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
-            handleLogin();
-        }
-    });
-});
+        if (
