@@ -1,9 +1,6 @@
-// script.js
+// script.js - Versi menggunakan localStorage
 
-// --- KONFIGURASI UNTUK GOOGLE APPS SCRIPT ---
-// *** PENTING: GANTIKAN URL DI BAWAH INI DENGAN URL SEBENAR WEB APP ANDA ***
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzeHvKycZZGFmdzyfTLzjPnhjDdG7QlvdzUPo2CNns-NpB8wGNjueqlKIE2uHTbgNTx/exec';
-// Jadual Gred Baru
+// Jadual Gred
 const GRADE_SCALE = [
   { minScore: 90, grade: 'A+' },
   { minScore: 80, grade: 'A' },
@@ -214,13 +211,18 @@ function calculateScore() {
 
 // --- FUNGSI UNTUK PENYIMPANAN DAN EKSPORT ---
 
-// Fungsi untuk menyimpan data markah dan catatan ke Google Sheets melalui Web App
-async function saveData() {
+// Fungsi untuk menyimpan data markah dan catatan ke localStorage
+function saveData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
-
     if (!selectedStudentId) {
         alert("Sila pilih seorang pelajar dahulu.");
+        return;
+    }
+
+    const selectedStudent = students.find(student => student.id === selectedStudentId);
+    if (!selectedStudent) {
+        alert("Ralat: Maklumat pelajar tidak dijumpai.");
         return;
     }
 
@@ -241,62 +243,29 @@ async function saveData() {
         notesHP5: document.getElementById('notesHP5').value.trim(),
         notesHP3: document.getElementById('notesHP3').value.trim(),
         notesHP8: document.getElementById('notesHP8').value.trim(),
-        notesExam: document.getElementById('notesExam').value.trim()
-        // Tarikh simpan akan ditambah oleh Web App
+        notesExam: document.getElementById('notesExam').value.trim(),
+        // Tarikh simpan
+        savedAt: new Date().toISOString()
     };
 
-    console.log("Data untuk disimpan:", dataToSave); // Untuk debugging
+    // Dapatkan data yang sedia ada
+    let allSavedData = JSON.parse(localStorage.getItem('rubricData_v2')) || {};
+    // Simpan data untuk pelajar ini, menimpa data lama jika ada
+    allSavedData[selectedStudentId] = dataToSave;
+    // Simpan semula ke localStorage
+    localStorage.setItem('rubricData_v2', JSON.stringify(allSavedData));
 
-    try {
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'cors', // Penting untuk komunikasi antara domain
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToSave)
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text(); // Dapatkan teks ralat dari server
-            console.error('Ralat dari server:', errorText);
-            throw new Error(`Ralat HTTP! status: ${response.status}, mesej: ${errorText}`);
-        }
-
-        const resultText = await response.text();
-        alert(resultText); // Papar mesej kejayaan atau ralat dari Web App
-        calculateScore(); // Kira semula untuk memastikan paparan terkini
-
-    } catch (error) {
-        console.error('Ralat menyimpan ', error);
-        alert('Ralat berlaku semasa menyimpan data. Sila cuba lagi. Ralat: ' + error.message);
-    }
+    alert("Data untuk pelajar ini telah disimpan!");
+    calculateScore(); // Kira semula untuk memastikan paparan terkini
 }
 
-// Fungsi untuk memuatkan data yang telah disimpan untuk pelajar tertentu dari Google Sheets
-async function loadDataForStudent(studentId) {
-    if (!studentId) return;
+// Fungsi untuk memuatkan data yang telah disimpan untuk pelajar tertentu
+function loadDataForStudent(studentId) {
+    const allSavedData = JSON.parse(localStorage.getItem('rubricData_v2')) || {};
+    const studentData = allSavedData[studentId];
 
-    try {
-        // Bina URL dengan parameter studentId
-        const url = `${WEB_APP_URL}?studentId=${encodeURIComponent(studentId)}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors' // Penting untuk komunikasi antara domain
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Ralat dari server semasa muat data:', errorText);
-            throw new Error(`Ralat HTTP semasa muat data! status: ${response.status}, mesej: ${errorText}`);
-        }
-
-        const studentData = await response.json();
-        console.log("Data dimuatkan:", studentData); // Untuk debugging
-
-        // Isikan borang dengan data yang dimuatkan
-        // Pastikan kunci dalam studentData sepadan dengan ID elemen input
+    if (studentData) {
+        // Muatkan markah
         document.getElementById('organizingA4').value = studentData.organizingA4 !== null ? studentData.organizingA4 : '';
         document.getElementById('positiveBehaviorKMI3').value = studentData.positiveBehaviorKMI3 !== null ? studentData.positiveBehaviorKMI3 : '';
         document.getElementById('organizingA4Comm').value = studentData.organizingA4Comm !== null ? studentData.organizingA4Comm : '';
@@ -317,25 +286,93 @@ async function loadDataForStudent(studentId) {
         if (document.getElementById('rubricForm').style.display !== 'none') {
              calculateScore();
         }
-
-    } catch (error) {
-        console.error('Ralat memuatkan ', error);
-         // Tidak perlu alert untuk ralat muat data, mungkin tiada data lagi
-         // Kosongkan borang jika ralat (pilihan)
-         resetForm();
     }
+    // Jika tiada data disimpan, borang kekal kosong/reset
 }
-
 
 // Fungsi untuk mengeksport data ke Excel
 function exportToExcel() {
-    alert("Fungsi eksport Excel tidak lagi tersedia dalam versi ini kerana data disimpan di Google Sheets. Sila akses spreadsheet anda secara terus untuk eksport.");
-    // Anda boleh mempertimbangkan untuk menambah fungsi eksport dari Google Sheets jika perlu.
+    const allSavedData = JSON.parse(localStorage.getItem('rubricData_v2')) || {};
+    const exportData = [];
+
+    // Fungsi pembantu untuk mengira markah berpemberat (digunakan semula)
+    function calcWeightedScore(rawScore, maxRawScore, weightPercentage) {
+        if (isNaN(rawScore) || rawScore < 0) return 0;
+        if (rawScore > maxRawScore) rawScore = maxRawScore;
+        return (rawScore / maxRawScore) * weightPercentage;
+    }
+
+    // Proses setiap entri data yang disimpan
+    for (const studentIdStr in allSavedData) {
+        const studentId = parseInt(studentIdStr);
+        const data = allSavedData[studentIdStr];
+        const student = students.find(s => s.id === studentId);
+
+        if (student) { // Hanya eksport jika maklumat pelajar dijumpai
+            // Kira semula markah untuk tujuan eksport
+            const scoreHP4 = calcWeightedScore((data.organizingA4 || 0) + (data.positiveBehaviorKMI3 || 0), 30, 30);
+            const scoreHP5 = calcWeightedScore((data.organizingA4Comm || 0) + (data.nonVerbalCommKMK12 || 0), 30, 30);
+            const scoreHP3 = calcWeightedScore(data.mechanismP4 || 0, 15, 15);
+            const scoreHP8 = calcWeightedScore((data.valueAppreciationA5 || 0) + (data.responsibilityKAT10 || 0), 30, 15);
+            const scoreExam = calcWeightedScore(data.examScore || 0, 10, 10);
+            const totalWeightedScore = scoreHP4 + scoreHP5 + scoreHP3 + scoreHP8 + scoreExam;
+
+            exportData.push({
+                "Nama_Pelajar": student.name,
+                "No_IC": student.ic,
+                "No_Giliran": student.a_giliran,
+                "Kelas": student.kelas,
+                "Siri": student.siri_big,
+                "HP4_Markah_Bahan": data.organizingA4,
+                "HP4_Markah_Tingkah_Laku": data.positiveBehaviorKMI3,
+                "HP4_Jumlah_Markah": scoreHP4.toFixed(2),
+                "Catatan_HP4": data.notesHP4,
+                "HP5_Markah_Bahan": data.organizingA4Comm,
+                "HP5_Markah_Komunikasi": data.nonVerbalCommKMK12,
+                "HP5_Jumlah_Markah": scoreHP5.toFixed(2),
+                "Catatan_HP5": data.notesHP5,
+                "HP3_Markah_Mekanisma": data.mechanismP4,
+                "HP3_Jumlah_Markah": scoreHP3.toFixed(2),
+                "Catatan_HP3": data.notesHP3,
+                "HP8_Markah_Nilai": data.valueAppreciationA5,
+                "HP8_Markah_Tanggungjawab": data.responsibilityKAT10,
+                "HP8_Jumlah_Markah": scoreHP8.toFixed(2),
+                "Catatan_HP8": data.notesHP8,
+                "Ujian_Markah": data.examScore,
+                "Ujian_Jumlah_Markah": scoreExam.toFixed(2),
+                "Catatan_Ujian": data.notesExam,
+                "Jumlah_Keseluruhan_Markah": totalWeightedScore.toFixed(2),
+                "Tarikh_Simpan": data.savedAt ? new Date(data.savedAt).toLocaleString() : ''
+            });
+        }
+    }
+
+    if (exportData.length === 0) {
+        alert("Tiada data pelajar yang sah untuk dieksport.");
+        return;
+    }
+
+    // Buat workbook dan worksheet menggunakan SheetJS
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Markah_Rubrik");
+
+    // Jana nama fail
+    const filename = `Markah_Rubrik_MPU2082_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
+    // Muat turun fail
+    XLSX.writeFile(wb, filename);
+    alert(`Data telah dieksport ke ${filename}`);
 }
 
 // Muatkan senarai pelajar dan pilihan penapis apabila halaman dimuatkan
 document.addEventListener('DOMContentLoaded', function() {
     loadFilterOptions(); // Muatkan pilihan kelas dan siri
     loadStudents(); // Muatkan semua pelajar pada mulanya
+
+    // Tambah event listener
     document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+    document.getElementById('saveDataBtn').addEventListener('click', saveData);
+    document.getElementById('calculateScoreBtn').addEventListener('click', calculateScore);
+    document.getElementById('exportBtn').addEventListener('click', exportToExcel);
 });
