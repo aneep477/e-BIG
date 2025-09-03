@@ -1,5 +1,27 @@
 // script.js
 
+// Fungsi untuk memaparkan notifikasi toast
+function showToast(title, message, isError = false) {
+    const toastElement = document.getElementById('liveToast');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastBody = document.getElementById('toastBody');
+    const toastHeader = toastElement.querySelector('.toast-header');
+
+    toastTitle.textContent = title;
+    toastBody.textContent = message;
+
+    if (isError) {
+        toastHeader.classList.remove('bg-success', 'text-white');
+        toastHeader.classList.add('bg-danger', 'text-white');
+    } else {
+        toastHeader.classList.remove('bg-danger', 'text-white');
+        toastHeader.classList.add('bg-success', 'text-white');
+    }
+
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+}
+
 // Jadual Gred
 const GRADE_SCALE = [
   { minScore: 90, grade: 'A+' },
@@ -23,28 +45,23 @@ let filteredStudents = [];
 let uniqueClasses = [];
 let uniqueSeries = [];
 
-// Fungsi untuk mendapatkan senarai unik kelas dan siri dari data pelajar
 function getUniqueFilters() {
     uniqueClasses = [...new Set(students.map(student => student.kelas).filter(Boolean))].sort();
     uniqueSeries = [...new Set(students.map(student => student.siri_big).filter(Boolean))].sort();
 }
 
-// Fungsi untuk memuatkan pilihan penapis ke dropdown
 function loadFilterOptions() {
     getUniqueFilters();
     const classFilter = document.getElementById('classFilter');
     const seriesFilter = document.getElementById('seriesFilter');
-
     classFilter.innerHTML = '<option value="">Semua Kelas</option>';
     seriesFilter.innerHTML = '<option value="">Semua Siri</option>';
-
     uniqueClasses.forEach(cls => {
         const option = document.createElement('option');
         option.value = cls;
         option.textContent = cls;
         classFilter.appendChild(option);
     });
-
     uniqueSeries.forEach(series => {
         const option = document.createElement('option');
         option.value = series;
@@ -53,11 +70,9 @@ function loadFilterOptions() {
     });
 }
 
-// Fungsi untuk memuatkan senarai pelajar ke dalam dropdown
 function loadStudents(studentsToLoad = students) {
     const studentSelect = document.getElementById('studentSelect');
     studentSelect.innerHTML = '<option value="" selected disabled>Pilih seorang pelajar</option>';
-
     studentsToLoad.forEach(student => {
         const option = document.createElement('option');
         option.value = student.id;
@@ -66,23 +81,19 @@ function loadStudents(studentsToLoad = students) {
     });
 }
 
-// Fungsi untuk mengaplikasikan penapis
 function applyFilters() {
     const classFilter = document.getElementById('classFilter').value;
     const seriesFilter = document.getElementById('seriesFilter').value;
-
     filteredStudents = students.filter(student => {
         const matchClass = !classFilter || (student.kelas && student.kelas === classFilter);
         const matchSeries = !seriesFilter || (student.siri_big && student.siri_big === seriesFilter);
         return matchClass && matchSeries;
     });
-
     loadStudents(filteredStudents);
     document.getElementById('studentSelect').value = "";
     onStudentSelectChange();
 }
 
-// Fungsi untuk menangani perubahan pemilihan pelajar
 function onStudentSelectChange() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
@@ -92,18 +103,14 @@ function onStudentSelectChange() {
 
     if (selectedStudentId) {
         const selectedStudent = students.find(student => student.id === selectedStudentId);
-
         if (selectedStudent) {
             document.getElementById('selectedStudentName').textContent = selectedStudent.name;
             document.getElementById('selectedStudentIC').textContent = selectedStudent.ic;
             document.getElementById('selectedStudentAGiliran').textContent = selectedStudent.a_giliran;
             document.getElementById('selectedStudentClass').textContent = selectedStudent.kelas || 'Tiada Maklumat';
             document.getElementById('selectedStudentSeries').textContent = selectedStudent.siri_big || 'Tiada Maklumat';
-
             studentInfoDiv.style.display = 'block';
             rubricForm.style.display = 'block';
-
-            // Dapatkan data dari Google Sheet
             loadDataForStudent(selectedStudentId);
         }
     } else {
@@ -113,7 +120,6 @@ function onStudentSelectChange() {
     }
 }
 
-// Fungsi untuk mereset borang rubrik
 function resetForm() {
     document.getElementById('rubricForm').reset();
     document.getElementById('scoreHP4').textContent = '0.00';
@@ -124,14 +130,12 @@ function resetForm() {
     document.getElementById('grade').textContent = '-';
 }
 
-// Fungsi untuk mengira markah berdasarkan pemberat
 function calculateWeightedScore(rawScore, maxRawScore, weightPercentage) {
     if (isNaN(rawScore) || rawScore < 0) return 0;
     if (rawScore > maxRawScore) rawScore = maxRawScore;
     return (rawScore / maxRawScore) * weightPercentage;
 }
 
-// Fungsi untuk menentukan gred
 function determineGrade(totalScore) {
      const score = parseFloat(totalScore);
      if (isNaN(score)) return 'Tidak Sah';
@@ -143,14 +147,10 @@ function determineGrade(totalScore) {
      return 'Tidak Sah';
 }
 
-// Fungsi utama untuk mengira jumlah markah
 function calculateScore() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
-    if (!selectedStudentId) {
-        // Jangan tunjuk amaran jika hanya memuatkan data
-        return;
-    }
+    if (!selectedStudentId) return;
 
     const selectedStudent = students.find(student => student.id === selectedStudentId);
     if (!selectedStudent) return;
@@ -179,24 +179,20 @@ function calculateScore() {
     document.getElementById('scoreExam').textContent = scoreExam.toFixed(2);
     document.getElementById('totalScore').textContent = totalScore.toFixed(2);
     document.getElementById('grade').textContent = grade;
-
     document.getElementById('result').style.display = 'block';
 }
 
-// --- FUNGSI BARU UNTUK GOOGLE SHEET ---
-
-// Fungsi untuk menyimpan data ke Google Sheet
 async function saveData() {
     const studentSelect = document.getElementById('studentSelect');
     const selectedStudentId = parseInt(studentSelect.value);
     if (!selectedStudentId) {
-        alert("Sila pilih seorang pelajar dahulu.");
+        showToast("Ralat", "Sila pilih seorang pelajar dahulu.", true);
         return;
     }
 
     const selectedStudent = students.find(student => student.id === selectedStudentId);
     if (!selectedStudent) {
-        alert("Ralat: Maklumat pelajar tidak dijumpai.");
+        showToast("Ralat", "Maklumat pelajar tidak dijumpai.", true);
         return;
     }
     
@@ -233,7 +229,7 @@ async function saveData() {
 
     const saveButton = document.getElementById('saveDataBtn');
     saveButton.disabled = true;
-    saveButton.textContent = 'Menyimpan...';
+    saveButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...`;
 
     try {
         await fetch(GOOGLE_SCRIPT_URL, {
@@ -244,17 +240,16 @@ async function saveData() {
             body: JSON.stringify(dataToSave),
             redirect: 'follow'
         });
-        alert("Data untuk pelajar ini telah berjaya disimpan ke Google Sheet!");
+        showToast("Berjaya", `Data untuk ${selectedStudent.name} telah disimpan!`);
     } catch (error) {
         console.error('Error saving data:', error);
-        alert("Gagal menyimpan data. Sila semak konsol untuk maklumat lanjut.");
+        showToast("Gagal", "Gagal menyimpan data. Sila semak sambungan internet anda.", true);
     } finally {
         saveButton.disabled = false;
-        saveButton.textContent = 'Simpan Data';
+        saveButton.innerHTML = 'Simpan Data';
     }
 }
 
-// Fungsi untuk memuatkan data dari Google Sheet
 async function loadDataForStudent(studentId) {
     resetForm();
     document.getElementById('result').style.display = 'none';
@@ -287,11 +282,9 @@ async function loadDataForStudent(studentId) {
     }
 }
 
-// Muatkan senarai pelajar dan pilihan penapis apabila halaman dimuatkan
 document.addEventListener('DOMContentLoaded', function() {
     loadFilterOptions();
     loadStudents();
-
     document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
     document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
     document.getElementById('saveDataBtn').addEventListener('click', saveData);
@@ -301,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (exportBtn) {
        exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
        exportBtn.addEventListener('click', () => {
-            // URL Google Sheet anda telah dimasukkan di sini
             window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
        });
     }
