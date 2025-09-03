@@ -38,7 +38,7 @@ let uniqueClasses = [];
 let uniqueSeries = [];
 
 // =======================================================
-// KANDUNGAN FUNGSI YANG HILANG KINI DIKEMBALIKAN
+// KANDUNGAN FUNGSI PENUH
 // =======================================================
 
 function getUniqueFilters() {
@@ -279,25 +279,27 @@ async function loadDataForStudent(studentId) {
 }
 
 // =======================================================
-// AKHIR BAHAGIAN FUNGSI YANG DIKEMBALIKAN
+// LOGIK LOG MASUK DAN PERMULAAN APLIKASI
 // =======================================================
 
-
-// Listener utama apabila halaman telah dimuatkan sepenuhnya
 document.addEventListener('DOMContentLoaded', function() {
     const loginContainer = document.getElementById('loginContainer');
     const mainContent = document.getElementById('mainContent');
     const passwordInput = document.getElementById('passwordInput');
     const loginBtn = document.getElementById('loginBtn');
 
-    // Fungsi untuk mengaktifkan aplikasi utama
     function initializeApp() {
-        console.log("Aplikasi dimulakan..."); // Mesej untuk pengesahan
+        console.log("Aplikasi dimulakan...");
         loadFilterOptions();
         loadStudents();
         document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
         document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-        // Butang di dalam borang tidak perlu diaktifkan di sini kerana ia sebahagian dari borang
+        
+        const saveDataBtn = document.getElementById('saveDataBtn');
+        if(saveDataBtn) saveDataBtn.addEventListener('click', saveData);
+
+        const calculateScoreBtn = document.getElementById('calculateScoreBtn');
+        if(calculateScoreBtn) calculateScoreBtn.addEventListener('click', calculateScore);
         
         const exportBtn = document.getElementById('exportBtn');
         if (exportBtn) {
@@ -306,13 +308,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
            });
         }
-
-        // Tambah event listener untuk butang di dalam borang secara berasingan
-        const saveDataBtn = document.getElementById('saveDataBtn');
-        if(saveDataBtn) saveDataBtn.addEventListener('click', saveData);
-
-        const calculateScoreBtn = document.getElementById('calculateScoreBtn');
-        if(calculateScoreBtn) calculateScoreBtn.addEventListener('click', calculateScore);
     }
 
     function handleLogin() {
