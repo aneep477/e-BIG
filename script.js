@@ -3,7 +3,7 @@
 // --- KONFIGURASI UNTUK GOOGLE APPS SCRIPT ---
 // Gantikan 'YOUR_WEB_APP_URL_HERE' dengan URL Web App yang anda dapat dari Google Apps Script
 // Contoh URL: https://script.google.com/macros/s/AKfycby.../exec
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzYOUR_WEB_APP_ID/exec'; // <-- GANTIKAN INI
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7VHSxTHZZCmYPcWmJXl60oc16TtNnAt3gkehmG5k4mOCTIMZ1-6WxusHk0q9Y4dk/exec'; // <-- GANTIKAN INI
 
 let filteredStudents = [];
 let uniqueClasses = [];
