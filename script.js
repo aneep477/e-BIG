@@ -116,6 +116,7 @@ function resetForm() {
     document.getElementById('rubricForm').reset();
     const resultDiv = document.getElementById('result');
     if (resultDiv) {
+        document.getElementById('resultStudentName').textContent = '';
         document.getElementById('scoreHP4').textContent = '0.00';
         document.getElementById('scoreHP5').textContent = '0.00';
         document.getElementById('scoreAmali2').textContent = '0.00';
@@ -247,10 +248,76 @@ async function saveData() {
 
 async function loadDataForStudent(studentId) {
     resetForm();
-    document.getElementById('result').style.display = 'none';
-
+    
     try {
         const response = await fetch(`${GOOGLE_SCRIPT_URL}?studentId=${studentId}`);
         const result = await response.json();
 
-        if (
+        if (result.result === 'success' && result.data) {
+            const studentData = result.data;
+            document.getElementById('organizingA4').value = studentData.organizingA4 !== null ? studentData.organizingA4 : '';
+            document.getElementById('positiveBehaviorKMI3').value = studentData.positiveBehaviorKMI3 !== null ? studentData.positiveBehaviorKMI3 : '';
+            document.getElementById('organizingA4Comm').value = studentData.organizingA4Comm !== null ? studentData.organizingA4Comm : '';
+            document.getElementById('nonVerbalCommKMK12').value = studentData.nonVerbalCommKMK12 !== null ? studentData.nonVerbalCommKMK12 : '';
+            document.getElementById('mechanismP4').value = studentData.mechanismP4 !== null ? studentData.mechanismP4 : '';
+            document.getElementById('valueAppreciationA5').value = studentData.valueAppreciationA5 !== null ? studentData.valueAppreciationA5 : '';
+            document.getElementById('responsibilityKAT10').value = studentData.responsibilityKAT10 !== null ? studentData.responsibilityKAT10 : '';
+            document.getElementById('examScore').value = studentData.examScore !== null ? studentData.examScore : '';
+            document.getElementById('notesHP4').value = studentData.notesHP4 || '';
+            document.getElementById('notesHP5').value = studentData.notesHP5 || '';
+            document.getElementById('notesHP3').value = studentData.notesHP3 || '';
+            document.getElementById('notesHP8').value = studentData.notesHP8 || '';
+            document.getElementById('notesExam').value = studentData.notesExam || '';
+            calculateScore();
+        } else {
+            console.log("Tiada data sedia ada untuk pelajar ini.");
+            document.getElementById('result').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('result').style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const loginContainer = document.getElementById('loginContainer');
+    const mainContent = document.getElementById('mainContent');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+
+    function initializeApp() {
+        console.log("Aplikasi dimulakan...");
+        loadFilterOptions();
+        loadStudents();
+        document.getElementById('studentSelect').addEventListener('change', onStudentSelectChange);
+        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+        document.getElementById('saveDataBtn').addEventListener('click', saveData);
+        document.getElementById('calculateScoreBtn').addEventListener('click', calculateScore);
+        
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) {
+           exportBtn.textContent = "Buka Pangkalan Data (Google Sheet)";
+           exportBtn.addEventListener('click', () => {
+                window.open('https://docs.google.com/spreadsheets/d/1JBj4FjkTCWCbqgUh_ZEDfKsCNrmMVTH60MgxutTUfnA/edit?gid=1084341755#gid=1084341755', '_blank');
+           });
+        }
+    }
+
+    function handleLogin() {
+        if (passwordInput.value === CORRECT_PASSWORD) {
+            loginContainer.classList.add('d-none');
+            mainContent.classList.remove('d-none');
+            initializeApp(); 
+        } else {
+            showToast("Gagal", "Kata laluan salah. Sila cuba lagi.", true);
+            passwordInput.value = "";
+        }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    passwordInput.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            handleLogin();
+        }
+    });
+});
