@@ -1,9 +1,24 @@
 // script.js
 
 // --- KONFIGURASI UNTUK GOOGLE APPS SCRIPT ---
-// Gantikan 'YOUR_WEB_APP_URL_HERE' dengan URL Web App yang anda dapat dari Google Apps Script
-// Contoh URL: https://script.google.com/macros/s/AKfycby.../exec
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby7VHSxTHZZCmYPcWmJXl60oc16TtNnAt3gkehmG5k4mOCTIMZ1-6WxusHk0q9Y4dk/exec'; // <-- GANTIKAN INI
+// *** PASTIKAN URL INI ADALAH URL SEBENAR WEB APP ANDA ***
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw2F3wqaF-6s8dyDavzKx4h_rFtYiLZsjFr2eczEx2nAdOZxm6V4lKHH6WbpW5jiJpZ/exec'; // <-- GANTIKAN INI DENGAN URL SEBENAR
+
+// Jadual Gred Baru
+const GRADE_SCALE = [
+  { minScore: 90, grade: 'A+' },
+  { minScore: 80, grade: 'A' },
+  { minScore: 75, grade: 'A-' },
+  { minScore: 70, grade: 'B+' },
+  { minScore: 65, grade: 'B' },
+  { minScore: 60, grade: 'B-' },
+  { minScore: 55, grade: 'C+' },
+  { minScore: 50, grade: 'C' },
+  { minScore: 40, grade: 'C-' },
+  { minScore: 30, grade: 'D+' },
+  { minScore: 20, grade: 'D' },
+  { minScore: 0, grade: 'F' }
+];
 
 let filteredStudents = [];
 let uniqueClasses = [];
@@ -127,6 +142,24 @@ function calculateWeightedScore(rawScore, maxRawScore, weightPercentage) {
     return (rawScore / maxRawScore) * weightPercentage;
 }
 
+// Fungsi untuk menentukan gred berdasarkan jumlah markah menggunakan jadual baru
+function determineGrade(totalScore) {
+     // Pastikan totalScore adalah nombor yang sah
+     const score = parseFloat(totalScore);
+     if (isNaN(score)) {
+         return 'Tidak Sah';
+     }
+
+     // Cari gred berdasarkan jadual
+     for (const gradeInfo of GRADE_SCALE) {
+         if (score >= gradeInfo.minScore) {
+             return gradeInfo.grade;
+         }
+     }
+     // Jika markah negatif (walaupun tidak mungkin dengan pengiraan semasa)
+     return 'Tidak Sah';
+}
+
 // Fungsi utama untuk mengira jumlah markah dan menentukan gred
 function calculateScore() {
     // Dapatkan ID pelajar yang dipilih
@@ -163,20 +196,8 @@ function calculateScore() {
     // Kira jumlah keseluruhan markah
     const totalScore = scoreHP4 + scoreHP5 + scoreHP3 + scoreHP8 + scoreExam;
 
-    // Tentukan gred berdasarkan jumlah markah
-    let grade = 'Tidak Hadir / Tiada Markah';
-    if (totalScore >= 85) {
-        grade = 'A (Cemerlang)';
-    } else if (totalScore >= 80) {
-        grade = 'A- (Cemerlang)';
-    } else if (totalScore >= 75) {
-        grade = 'B+ (Kepujian)';
-    } else if (totalScore >= 68) {
-        grade = 'B (Sederhana)';
-    } else if (totalScore > 0) {
-        grade = 'C (Lemah)';
-    }
-    // Jika totalScore adalah 0, gred kekal 'Tidak Hadir / Tiada Markah'
+    // Tentukan gred berdasarkan jadual baru
+    const grade = determineGrade(totalScore);
 
     // Paparkan keputusan dengan 2 tempat perpuluhan
     document.getElementById('resultStudentName').textContent = selectedStudent.name;
@@ -238,7 +259,9 @@ async function saveData() {
         });
 
         if (!response.ok) {
-            throw new Error(`Ralat HTTP! status: ${response.status}`);
+            const errorText = await response.text(); // Dapatkan teks ralat dari server
+            console.error('Ralat dari server:', errorText);
+            throw new Error(`Ralat HTTP! status: ${response.status}, mesej: ${errorText}`);
         }
 
         const resultText = await response.text();
@@ -246,7 +269,7 @@ async function saveData() {
         calculateScore(); // Kira semula untuk memastikan paparan terkini
 
     } catch (error) {
-        console.error('Ralat menyimpan ', error);
+        console.error('Ralat menyimpan data:', error);
         alert('Ralat berlaku semasa menyimpan data. Sila cuba lagi. Ralat: ' + error.message);
     }
 }
@@ -265,7 +288,9 @@ async function loadDataForStudent(studentId) {
         });
 
         if (!response.ok) {
-            throw new Error(`Ralat HTTP! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Ralat dari server semasa muat data:', errorText);
+            throw new Error(`Ralat HTTP semasa muat data! status: ${response.status}, mesej: ${errorText}`);
         }
 
         const studentData = await response.json();
@@ -295,7 +320,7 @@ async function loadDataForStudent(studentId) {
         }
 
     } catch (error) {
-        console.error('Ralat memuatkan ', error);
+        console.error('Ralat memuatkan data:', error);
          // Tidak perlu alert untuk ralat muat data, mungkin tiada data lagi
          // Kosongkan borang jika ralat (pilihan)
          resetForm();
@@ -307,78 +332,6 @@ async function loadDataForStudent(studentId) {
 function exportToExcel() {
     alert("Fungsi eksport Excel tidak lagi tersedia dalam versi ini kerana data disimpan di Google Sheets. Sila akses spreadsheet anda secara terus untuk eksport.");
     // Anda boleh mempertimbangkan untuk menambah fungsi eksport dari Google Sheets jika perlu.
-    /*
-    const allSavedData = JSON.parse(localStorage.getItem('rubricData')) || {};
-    const exportData = [];
-
-    // Fungsi pembantu untuk mengira markah berpemberat (digunakan semula)
-    function calcWeightedScore(rawScore, maxRawScore, weightPercentage) {
-        if (isNaN(rawScore) || rawScore < 0) return 0;
-        if (rawScore > maxRawScore) rawScore = maxRawScore;
-        return (rawScore / maxRawScore) * weightPercentage;
-    }
-
-    // Proses setiap entri data yang disimpan
-    for (const studentIdStr in allSavedData) {
-        const studentId = parseInt(studentIdStr);
-        const data = allSavedData[studentIdStr];
-        const student = students.find(s => s.id === studentId);
-
-        if (student) { // Hanya eksport jika maklumat pelajar dijumpai
-            // Kira semula markah untuk tujuan eksport
-            const scoreHP4 = calcWeightedScore((data.organizingA4 || 0) + (data.positiveBehaviorKMI3 || 0), 30, 30);
-            const scoreHP5 = calcWeightedScore((data.organizingA4Comm || 0) + (data.nonVerbalCommKMK12 || 0), 30, 30);
-            const scoreHP3 = calcWeightedScore(data.mechanismP4 || 0, 15, 15);
-            const scoreHP8 = calcWeightedScore((data.valueAppreciationA5 || 0) + (data.responsibilityKAT10 || 0), 30, 15);
-            const scoreExam = calcWeightedScore(data.examScore || 0, 10, 10);
-            const totalWeightedScore = scoreHP4 + scoreHP5 + scoreHP3 + scoreHP8 + scoreExam;
-
-            exportData.push({
-                "Nama_Pelajar": student.name,
-                "No_IC": student.ic,
-                "No_Giliran": student.a_giliran,
-                "Kelas": student.kelas,
-                "Siri": student.siri_big,
-                "HP4_Markah_Bahan": data.organizingA4,
-                "HP4_Markah_Tingkah_Laku": data.positiveBehaviorKMI3,
-                "HP4_Jumlah_Markah": scoreHP4.toFixed(2),
-                "Catatan_HP4": data.notesHP4,
-                "HP5_Markah_Bahan": data.organizingA4Comm,
-                "HP5_Markah_Komunikasi": data.nonVerbalCommKMK12,
-                "HP5_Jumlah_Markah": scoreHP5.toFixed(2),
-                "Catatan_HP5": data.notesHP5,
-                "HP3_Markah_Mekanisma": data.mechanismP4,
-                "HP3_Jumlah_Markah": scoreHP3.toFixed(2),
-                "Catatan_HP3": data.notesHP3,
-                "HP8_Markah_Nilai": data.valueAppreciationA5,
-                "HP8_Markah_Tanggungjawab": data.responsibilityKAT10,
-                "HP8_Jumlah_Markah": scoreHP8.toFixed(2),
-                "Catatan_HP8": data.notesHP8,
-                "Ujian_Markah": data.examScore,
-                "Ujian_Jumlah_Markah": scoreExam.toFixed(2),
-                "Catatan_Ujian": data.notesExam,
-                "Jumlah_Keseluruhan_Markah": totalWeightedScore.toFixed(2),
-                "Tarikh_Simpan": data.savedAt ? new Date(data.savedAt).toLocaleString() : ''
-            });
-        }
-    }
-
-    if (exportData.length === 0) {
-        alert("Tiada data pelajar yang sah untuk dieksport.");
-        return;
-    }
-
-    // Buat workbook dan worksheet menggunakan SheetJS
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Markah_Rubrik");
-
-    // Jana nama fail
-    const filename = `Markah_Rubrik_MPU2082_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
-    // Muat turun fail
-    XLSX.writeFile(wb, filename);
-    alert(`Data telah dieksport ke ${filename}`);
-    */
 }
 
 // Muatkan senarai pelajar dan pilihan penapis apabila halaman dimuatkan
